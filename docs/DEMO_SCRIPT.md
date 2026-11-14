@@ -41,7 +41,7 @@ valid for 20 hours from the run.
 | 1:48-2:00 | README architecture diagram, then the Figma file (components and screens). | "Under it: an OpenStreetMap walking graph with a cost model we can explain weight by weight; Claude reads, plain code verifies; Databricks schedules, stores every decision and serves the result; and the interface is designed in Figma, with the app's colours and type generated from that file." |
 
 In testing the avatar appeared about three seconds after the tap and began its greeting straight away; the
-reply to a question began about four seconds after the question ended. If the avatar is slower to appear, keep
+reply to a question began three to four seconds after the question ended. If the avatar is slower to appear, keep
 recording and cut the wait with a caption "avatar connecting, cut". Do not speed up the conversation itself.
 
 ## Numbers to re-check on the morning (they change)

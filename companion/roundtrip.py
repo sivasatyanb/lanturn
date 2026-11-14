@@ -126,7 +126,7 @@ async def main() -> int:
             except asyncio.TimeoutError:
                 if started:
                     quiet += 1.0
-                    if quiet >= 1.5:
+                    if quiet >= 2.5:
                         break
                 continue
             if loud(f):
@@ -136,7 +136,7 @@ async def main() -> int:
                 quiet += f.samples_per_channel / f.sample_rate
             if started:
                 frames.append(f)
-                if quiet >= 1.5:
+                if quiet >= 2.5:
                     break
         return frames, started
 

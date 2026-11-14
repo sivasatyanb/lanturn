@@ -195,7 +195,7 @@ directions Lantern computed and is told to use nothing else if asked about the r
 |---|---|---|
 | Room, media transport | LiveKit | `LIVEKIT_*` |
 | Speech recognition and voice | LiveKit Inference (Deepgram Nova 3, Cartesia Sonic) | `LIVEKIT_*`, no extra keys |
-| Conversation | Claude, through the LiveKit Anthropic plugin | `ANTHROPIC_API_KEY` |
+| Conversation | Claude Haiku 5.5, through the LiveKit Anthropic plugin | `ANTHROPIC_API_KEY` |
 | Avatar video | Synthesia Interactive Avatar API, joins the room as a participant | `SYNTHESIA_API_KEY` |
 
 The browser asks for the microphone when the call button is tapped (the camera is never requested), then

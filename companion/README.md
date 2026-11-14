@@ -17,7 +17,7 @@ worker  ── speech recognition -> Claude -> voice, and asks Synthesia to rend
 |---|---|---|
 | LiveKit project | rooms and media transport | `LIVEKIT_URL`, `LIVEKIT_API_KEY`, `LIVEKIT_API_SECRET` |
 | LiveKit Inference | speech recognition (Deepgram Nova 3) and voice (Cartesia Sonic) | the LiveKit keys; no provider keys |
-| Claude | conversation, via `livekit-plugins-anthropic` | `ANTHROPIC_API_KEY` |
+| Claude (Haiku 5.5) | conversation, via `livekit-plugins-anthropic` | `ANTHROPIC_API_KEY` |
 | Synthesia Interactive Avatar API | avatar video, lip-synced to the companion's voice | `SYNTHESIA_API_KEY` |
 
 Synthesia's API only renders the avatar: it has no prompt, greeting or knowledge setting. Context is passed
@@ -36,8 +36,8 @@ and a short-lived room token.
 3. `ANTHROPIC_API_KEY`: already used by the agent.
 4. Optional: `SYNTHESIA_AVATAR_ID` (default: the avatar used in Synthesia's quickstart; only synthetic and
    personal avatars can be interactive, copy the "Interactive ID" from the Avatars page),
-   `COMPANION_VOICE_ID` (a Cartesia voice id), `COMPANION_LLM_MODEL` (default `claude-opus-5-5`;
-   `claude-haiku-5-5` starts replying sooner).
+   `COMPANION_VOICE_ID` (a Cartesia voice id), `COMPANION_LLM_MODEL` (default `claude-haiku-5-5`, chosen
+   so spoken replies start quickly; `claude-opus-5-5` also works but starts replying later).
 
 The worker needs its own virtualenv because `livekit-agents` ships x64 wheels only on Windows. On an ARM64
 Windows machine use an x64 Python (3.10 to 3.14); elsewhere any supported Python works.
