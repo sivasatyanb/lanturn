@@ -3,7 +3,7 @@
    https://www.figma.com/design/1GlEqbaZG7xphZQwJ98Tic */
 :root {
   --bg: #0c1222;                   /* color/bg/app */
-  --map: #0a0f1c;                  /* color/bg/map */
+  --map: #1b2337;                  /* color/bg/map */
   --surface: #141c33;              /* color/bg/surface */
   --surface-2: #1c2644;            /* color/bg/surface-raised */
   --surface-selected: #202c50;     /* color/bg/surface-selected */
@@ -14,18 +14,25 @@
   --fast: #62c6ff;                 /* color/route/fastest */
   --lit: #ffc857;                  /* color/route/lit */
   --prev: #c9d1e6;                 /* color/route/previous */
-  --unlit: #c07cff;                /* color/lighting/unlit */
-  --unknown: #7f8aa6;              /* color/lighting/unknown */
+  --unlit: #d6dbe6;                /* color/lighting/unlit */
+  --unknown: #a9b2c7;              /* color/lighting/unknown */
   --alert: #ff7a6b;                /* color/status/alert */
   --alert-bg: rgba(255, 122, 107, 0.12); /* color/status/alert-bg */
   --alert-border: rgba(255, 122, 107, 0.55); /* color/status/alert-border */
   --on-alert: #2b0d09;             /* color/status/on-alert */
   --on-lit: #2b1d00;               /* color/status/on-lit */
-  --on-unlit: #1d0b33;             /* color/status/on-unlit */
+  --replay: #c07cff;               /* color/status/replay */
+  --on-replay: #1d0b33;            /* color/status/on-replay */
   --ok: #5fd39a;                   /* color/status/ok */
   --on-ok: #062615;                /* color/status/on-ok */
-  --map-park: #12261f;             /* color/map/park */
-  --map-road: #263252;             /* color/map/road */
+  --map-park: #173f2d;             /* color/map/park */
+  --map-road: #3c4869;             /* color/map/road */
+  --map-road-major: #515f86;       /* color/map/road-major */
+  --map-path: #56628a;             /* color/map/path */
+  --map-water: #143352;            /* color/map/water */
+  --map-building: #232d47;         /* color/map/building */
+  --map-label: #ffffff;            /* color/map/label */
+  --map-label-halo: #0a0f1c;       /* color/map/label-halo */
   --casing: #060a14;               /* color/map/casing */
   --radius-card: 14px;             /* radius/card */
   --radius-sheet: 22px;            /* radius/sheet */
@@ -55,4 +62,7 @@
   --type-body-small: 400 12px/16px var(--font-family);   /* Body/Small */
   --type-body-micro: 400 10.5px/14px var(--font-family);   /* Body/Micro */
   --type-body-quote: italic 400 13px/18px var(--font-family);   /* Body/Quote */
+  --type-label-button: 700 17px/22px var(--font-family);   /* Label/Button */
+  --type-display-nav: 800 30px/34px var(--font-family);   /* Display/Nav */
+  --type-display-nav-tracking: -0.5px;
 }

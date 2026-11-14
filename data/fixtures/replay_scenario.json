@@ -27,7 +27,7 @@
    "_synthetic": true,
    "_expect": "publish_close",
    "_start_offset_h": -1,
-   "_end_offset_h": 10,
+   "_end_offset_h": 20,
    "category": "Works",
    "subCategory": "Emergency works",
    "severity": "Serious",

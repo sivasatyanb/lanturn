@@ -2,9 +2,14 @@
 
   python scripts/databricks_deploy.py deploy            upload code + data, create/update the job (paused)
   python scripts/databricks_deploy.py deploy --unpause  ...and leave the 30-minute schedule running
-  python scripts/databricks_deploy.py run [--replay 1|2] [--wait]   trigger one run now
+  python scripts/databricks_deploy.py run [--wait]      trigger one live run now
   python scripts/databricks_deploy.py pause | unpause
   python scripts/databricks_deploy.py status            last run + what the app would read
+
+Demo (replay) path, isolated from the live job, tables and volume:
+  python scripts/databricks_deploy.py deploy-demo       create schema lantern_demo + job lantern-agent-demo
+  python scripts/databricks_deploy.py run --replay 1|2 [--wait]     replay on the demo job only
+  python scripts/databricks_deploy.py status --demo
 
 Prerequisites (once):
   databricks auth login --host <workspace-url> --profile walknight
@@ -89,8 +94,30 @@ def deploy(unpause: bool) -> None:
     print(f"job '{ops.JOB_NAME}' id={jid} schedule=every 30 min ({'UNPAUSED' if unpause else 'PAUSED'})")
 
 
+def deploy_demo() -> None:
+    """Create the isolated replay path: schema, volumes, code bundle, notebook copy and job.
+    Touches nothing that the live job uses."""
+    schema = ops.DEMO_SCHEMA
+    if not cli_ok("schemas", "create", schema, CATALOG):
+        raise SystemExit(f"could not create schema {CATALOG}.{schema}")
+    for vol in ("code", "published"):
+        if not cli_ok("volumes", "create", CATALOG, schema, vol, "MANAGED"):
+            raise SystemExit(f"could not create volume {CATALOG}.{schema}.{vol}")
+    info = build_bundle()
+    remote = f"dbfs:/Volumes/{CATALOG}/{schema}/code/lantern_bundle.zip"
+    print(f"bundle {info} -> {remote}")
+    cli("fs", "cp", str(BUNDLE_LOCAL), remote, "--overwrite")
+    cli("workspace", "mkdirs", ops.DEMO_WORKSPACE_ROOT)
+    print(f"upload notebook -> {ops.DEMO_NOTEBOOK_PATH}")
+    cli("workspace", "import", ops.DEMO_NOTEBOOK_PATH, "--file", "databricks/lantern_agent_job.py",
+        "--format", "SOURCE", "--language", "PYTHON", "--overwrite")
+    jid = ops.upsert_demo_job()
+    print(f"job '{ops.DEMO_JOB_NAME}' id={jid} schema={CATALOG}.{schema} (no schedule; run on demand)")
+
+
 def run(replay: str | None, wait: bool) -> int:
-    res = ops.trigger_job("replay" if replay else "live", replay)
+    # A replay always goes to the demo job; the live job only ever sees the live feed.
+    res = ops.trigger_job("replay" if replay else "live", replay, target="demo" if replay else "live")
     rid = res["run_id"]
     print("started run", rid)
     if not wait:
@@ -116,9 +143,12 @@ def set_paused(paused: bool) -> None:
     print("schedule", "PAUSED" if paused else "UNPAUSED")
 
 
-def status() -> None:
-    store = DatabricksVolumeStore()
-    print("job status:", json.dumps(ops.job_status(), indent=1))
+def status(demo: bool = False) -> None:
+    from lantern.store import get_demo_store
+
+    store = get_demo_store("databricks") if demo else DatabricksVolumeStore()
+    print("path:", "demo (replay)" if demo else "live")
+    print("job status:", json.dumps(ops.job_status("demo" if demo else "live"), indent=1))
     ov = store.read_published()
     print("published overlay:", None if ov is None else
           {"version": ov["version"], "mode": ov["mode"], "published_at": ov["published_at"],
@@ -142,10 +172,14 @@ def main() -> int:
     r.add_argument("--wait", action="store_true")
     sub.add_parser("pause")
     sub.add_parser("unpause")
-    sub.add_parser("status")
+    sub.add_parser("deploy-demo")
+    s = sub.add_parser("status")
+    s.add_argument("--demo", action="store_true")
     a = ap.parse_args()
     if a.cmd == "deploy":
         deploy(a.unpause)
+    elif a.cmd == "deploy-demo":
+        deploy_demo()
     elif a.cmd == "run":
         return run(a.replay, a.wait)
     elif a.cmd == "pause":
@@ -153,7 +187,7 @@ def main() -> int:
     elif a.cmd == "unpause":
         set_paused(False)
     elif a.cmd == "status":
-        status()
+        status(a.demo)
     return 0
 
 

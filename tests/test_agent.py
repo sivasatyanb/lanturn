@@ -101,7 +101,7 @@ def test_withdrawn_when_record_leaves_feed(g, store):
 
 def test_expired_entry_removed_on_later_run(g, store):
     _run(g, store, "1")
-    later = NOW + timedelta(hours=11)                    # REPLAY-001 ends at NOW + 10 h
+    later = NOW + timedelta(hours=21)                    # REPLAY-001 ends at NOW + 20 h
     recs, _ = replay_records(NOW, "1", include_capture=False)   # same records, not re-timed
     res = agent_run.execute(g, store, agent_run.fixture_feed(recs, "stale-feed"),
                             assessor=stub_assessor, now=later, mode="replay")

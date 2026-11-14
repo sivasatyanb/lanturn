@@ -56,7 +56,7 @@ records = [
         "The road, cycle lane and both footways are closed due to a burst water main. "
         "There is no pedestrian access past the site.",
         "Thames Water are on site. Repairs are expected to continue overnight.",
-        midpoint(ex_a, ex_b), -1, 10, sub="Emergency works", severity="Serious", closures=True,
+        midpoint(ex_a, ex_b), -1, 20, sub="Emergency works", severity="Serious", closures=True,
         expect="publish_close"),
     # 2. Vehicle-only closure: must not change walking routes.
     rec("REPLAY-002", "[A4] KENSINGTON ROAD (SW7 ) (Westminster)",

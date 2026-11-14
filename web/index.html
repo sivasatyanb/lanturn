@@ -17,7 +17,8 @@
 <body>
   <div id="map" aria-label="Map of walking routes"></div>
 
-  <header id="trip" class="card">
+  <!-- ===== Planning ===== -->
+  <header id="trip" class="card plan-only">
     <div class="trip-rows">
       <button class="place" id="btn-from" aria-label="Change start">
         <span class="dot dot-from" aria-hidden="true"></span>
@@ -31,29 +32,67 @@
     <button id="btn-swap" class="icon-btn" aria-label="Swap start and destination">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4v16M7 20l-4-4M17 20V4M17 4l4 4"/></svg>
     </button>
-    <div class="times" role="group" aria-label="Departure time" id="times"></div>
+    <div class="when" role="group" aria-label="When" id="when">
+      <button class="when-btn" data-when="now" aria-pressed="true">Leave now</button>
+      <button class="when-btn" data-when="leave" aria-pressed="false">Leave at</button>
+      <button class="when-btn" data-when="arrive" aria-pressed="false">Arrive by</button>
+    </div>
+    <button class="when-detail" id="when-detail" hidden aria-label="Change time"></button>
   </header>
 
-  <div class="legend" id="legend" hidden>
+  <div class="legend plan-only" id="legend" hidden>
     <span><i class="lg lg-lit"></i>Lit</span>
     <span><i class="lg lg-unlit"></i>Unlit</span>
-    <span><i class="lg lg-unknown"></i>Not recorded</span>
+    <span><i class="lg lg-unknown"></i>Unknown</span>
   </div>
+  <div class="demo-pill plan-only" id="demo-pill" hidden><span class="tag tag-replay">DEMO</span>Replay data, not live</div>
 
-  <section id="sheet" class="sheet" aria-live="polite">
+  <section id="sheet" class="sheet plan-only" aria-live="polite">
     <div class="handle" aria-hidden="true"></div>
-    <div id="banner" class="banner" hidden></div>
     <div id="notice" class="notice" hidden></div>
+    <button id="btn-start" class="start" hidden>
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2.5 20.5 21 12 17.2 3.5 21z"/></svg>
+      Start!
+    </button>
     <div id="cards" class="cards"></div>
-    <p id="explain" class="explain"></p>
     <footer class="foot">
-      <button id="btn-agent" class="agent-chip" aria-label="Open agent activity">
+      <button id="btn-agent" class="agent-chip" aria-label="Open disruption details">
         <span class="pulse" id="agent-dot" aria-hidden="true"></span>
-        <span id="agent-chip-text">Checking disruptions…</span>
+        <span id="agent-chip-text">Checking TfL…</span>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
       </button>
-      <p class="disclaimer">Estimates from open data on street conditions, not a guarantee that a route is safe.</p>
+      <p class="disclaimer">Street conditions from open data. Not a guarantee that a route is safe.</p>
     </footer>
+  </section>
+
+  <!-- ===== Navigation preview ===== -->
+  <section id="nav-top" class="nav-top card nav-only" aria-live="polite">
+    <div class="nav-arrow" id="nav-arrow" aria-hidden="true"></div>
+    <div class="nav-text">
+      <div class="nav-dist" id="nav-dist"></div>
+      <div class="nav-instr" id="nav-instr"></div>
+      <div class="nav-then" id="nav-then"></div>
+    </div>
+    <button id="btn-call" class="call-btn" aria-label="Start video call with the walking companion">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="6" width="13" height="12" rx="3"/><path d="M15.5 10.5 21.5 7v10l-6-3.5z"/></svg>
+    </button>
+  </section>
+
+  <aside id="call" class="call nav-only" hidden aria-live="polite">
+    <video id="call-video" playsinline autoplay></video>
+    <div class="call-state" id="call-state"></div>
+    <button id="btn-retry-call" class="call-retry" hidden>Retry</button>
+    <button id="btn-hangup" class="hangup" aria-label="Hang up">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 9c-3.6 0-7 1-9.4 2.9-.8.6-.8 1.700-.3 2.500l1.200 1.800c.5.7 1.400.9 2.100.5l2.500-1.300c.6-.3.9-.9.9-1.500v-1.300c2-.5 4-.5 6 0v1.300c0 .6.3 1.200.9 1.500l2.500 1.300c.7.4 1.600.2 2.100-.5l1.200-1.800c.5-.8.5-1.900-.3-2.500C19 10 15.600 9 12 9z"/></svg>
+    </button>
+  </aside>
+
+  <section id="nav-bottom" class="nav-bottom card nav-only">
+    <div class="nav-stats">
+      <span class="nav-min"><b id="nav-min"></b><small>min</small></span>
+      <span class="nav-sub" id="nav-sub"></span>
+    </div>
+    <button id="btn-exit" class="exit">Exit navigation</button>
   </section>
 
   <div id="modal" class="modal" hidden>
@@ -72,6 +111,7 @@
   <div id="toast" class="toast" hidden></div>
 
   <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+  <script src="/mapstyle.js"></script>
   <script src="/app.js"></script>
 </body>
 </html>
