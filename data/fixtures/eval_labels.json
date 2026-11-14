@@ -1,0 +1,122 @@
+{
+  "_about": "Hand labels for evaluating the agent's judgment step. 'actionable' means: the record text explicitly states a current effect on pedestrians (footway closed/restricted, crossing affected) that has not been superseded by its own update. Labelled on 14 Nov 2026 from the record text by the same developer that built the system (Claude, working as the team's coding agent). The labels are not blind: four of the real records (TIMS-230857, TIMS-237525, TIMS-237464, TIMS-237924) and all eight synthetic records had already been run through the assessor during development. Every captured record not listed here was labelled not actionable after a keyword screen (footway, pavement, pedestrian, footpath, crossing, subway, walkway) found no pedestrian statement in it.",
+  "labels": {
+    "TIMS-236361": {
+      "actionable": false,
+      "impact": [
+        "none"
+      ],
+      "note": "Vehicle tunnel closure."
+    },
+    "TIMS-219173": {
+      "actionable": true,
+      "impact": [
+        "footway_restricted"
+      ],
+      "note": "'Various carriageway and footway restrictions'."
+    },
+    "TIMS-237525": {
+      "actionable": true,
+      "impact": [
+        "footway_restricted"
+      ],
+      "note": "'The footway is restricted'."
+    },
+    "TIMS-237464": {
+      "actionable": true,
+      "impact": [
+        "footway_closed",
+        "footway_restricted"
+      ],
+      "note": "'The footpath is blocked'."
+    },
+    "TIMS-237924": {
+      "actionable": true,
+      "impact": [
+        "footway_restricted"
+      ],
+      "note": "Works on the pavement with a pedestrian walkway in lane one."
+    },
+    "TIMS-227985": {
+      "actionable": false,
+      "impact": [
+        "unclear",
+        "none",
+        "footway_restricted"
+      ],
+      "note": "Lane closures 'to facilitate footway works': effect on pedestrians is not stated."
+    },
+    "TIMS-237984": {
+      "actionable": true,
+      "impact": [
+        "footway_restricted",
+        "footway_closed"
+      ],
+      "note": "'road, cycle lane and pavement is obstructed'."
+    },
+    "TIMS-238041": {
+      "actionable": true,
+      "impact": [
+        "crossing_affected"
+      ],
+      "note": "'pedestrian traffic signals ... are faulty'."
+    },
+    "REPLAY-001": {
+      "actionable": true,
+      "impact": [
+        "footway_closed"
+      ],
+      "note": "Synthetic."
+    },
+    "REPLAY-002": {
+      "actionable": false,
+      "impact": [
+        "none"
+      ],
+      "note": "Synthetic. Vehicle-only closure."
+    },
+    "REPLAY-003": {
+      "actionable": false,
+      "impact": [
+        "unclear",
+        "none"
+      ],
+      "note": "Synthetic. 'Pedestrians should take care' states no restriction."
+    },
+    "REPLAY-004": {
+      "actionable": false,
+      "impact": [
+        "footway_closed"
+      ],
+      "note": "Synthetic. Update says works are complete."
+    },
+    "REPLAY-005": {
+      "actionable": true,
+      "impact": [
+        "footway_closed"
+      ],
+      "note": "Synthetic. Text is explicit; the location check rejects it later."
+    },
+    "REPLAY-006": {
+      "actionable": true,
+      "impact": [
+        "footway_restricted"
+      ],
+      "note": "Synthetic."
+    },
+    "REPLAY-007": {
+      "actionable": false,
+      "impact": [
+        "footway_closed"
+      ],
+      "note": "Synthetic. Update says the footway has reopened."
+    },
+    "REPLAY-008": {
+      "actionable": false,
+      "impact": [
+        "none"
+      ],
+      "note": "Synthetic. Station closure only."
+    }
+  }
+}

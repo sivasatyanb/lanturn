@@ -1,0 +1,20 @@
+{
+ "n": 121,
+ "tp": 9,
+ "fp": 0,
+ "fn": 0,
+ "tn": 112,
+ "precision": 1.0,
+ "recall": 1.0,
+ "quotes_ok": 11,
+ "quotes_checked": 11,
+ "agreement": [
+  16,
+  16
+ ],
+ "tokens_in": 251422,
+ "tokens_out": 28548,
+ "cost_usd": 1.58,
+ "median_latency_s": 2.8132264614105225,
+ "failures": 0
+}

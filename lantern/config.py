@@ -25,7 +25,7 @@ WALK_SPEED_MPS = 1.34
 
 PLACES = {
     "imperial_south_ken": {
-        "name": "Imperial College, South Kensington",
+        "name": "Imperial College, South Ken",
         "short": "Imperial (Exhibition Rd)",
         "lat": 51.49870, "lon": -0.17455,
     },

@@ -63,12 +63,15 @@
   }
 
   // ---------- map ----------
+  const BASEMAP_URL = "https://tiles.openfreemap.org/styles/dark";
+  const BLANK_STYLE = { version: 8, sources: {}, layers: [{ id: "bg", type: "background", paint: { "background-color": "#0a0f1c" } }] };
   function initMap() {
     const b = state.config.bbox;
     let map;
     try {
+      // Start on a plain background so routes draw immediately; the basemap is swapped in when it arrives.
       map = new maplibregl.Map({
-        container: "map", style: "https://tiles.openfreemap.org/styles/dark",
+        container: "map", style: BLANK_STYLE,
         bounds: [[b.west, b.south], [b.east, b.north]], attributionControl: false,
         maxBounds: [[b.west - 0.06, b.south - 0.04], [b.east + 0.06, b.north + 0.04]],
         dragRotate: false, pitchWithRotate: false,
@@ -77,16 +80,17 @@
     map.addControl(new maplibregl.AttributionControl({ compact: true, customAttribution: "Routes &amp; lighting © OpenStreetMap contributors · Powered by TfL Open Data" }));
     map.touchZoomRotate.disableRotation();
     const collapse = () => document.querySelectorAll(".maplibregl-ctrl-attrib").forEach((el) => el.classList.remove("maplibregl-compact-show"));
-    collapse(); setTimeout(collapse, 800); map.on("load", collapse);
+    collapse(); setTimeout(collapse, 800);
     state.map = map;
-    const ready = () => { if (state.mapReady) return; state.mapReady = true; addLayers(); drawRoutes(); };
-    map.on("load", ready);
-    // If the basemap cannot load (offline), still draw routes on a plain background.
-    map.on("error", () => { if (!state.mapReady && map.isStyleLoaded && !map.isStyleLoaded()) setTimeout(() => { try { if (!state.mapReady && map.getStyle()) ready(); } catch (_) {} }, 1500); });
-    setTimeout(() => { if (!state.mapReady) { try { map.setStyle({ version: 8, sources: {}, layers: [{ id: "bg", type: "background", paint: { "background-color": "#0a0f1c" } }] }); map.once("styledata", ready); } catch (_) {} } }, 6000);
+    map.on("style.load", () => { state.mapReady = true; addLayers(); drawRoutes(); collapse(); });
+    map.on("click", "route-other", (e) => { const k = e.features[0].properties.route; if (k) select(k); });
+    fetch(BASEMAP_URL).then((r) => (r.ok ? r.json() : Promise.reject(new Error("basemap " + r.status))))
+      .then((style) => map.setStyle(style))
+      .catch(() => { /* offline or blocked: keep the plain background */ });
   }
   function addLayers() {
     const m = state.map;
+    if (m.getSource("routes")) return;
     const empty = { type: "FeatureCollection", features: [] };
     for (const id of ["prev", "routes", "closed", "restricted"]) m.addSource(id, { type: "geojson", data: empty });
     const lineBase = { "line-cap": "round", "line-join": "round" };
@@ -104,7 +108,6 @@
     m.addLayer({ id: "restricted", type: "line", source: "restricted", layout: lineBase, paint: { "line-color": COLORS.preferred, "line-width": 5, "line-opacity": 0.9, "line-dasharray": [0.4, 1.6] } });
     m.addLayer({ id: "closed-casing", type: "line", source: "closed", layout: lineBase, paint: { "line-color": "#2b0d09", "line-width": 11 } });
     m.addLayer({ id: "closed", type: "line", source: "closed", layout: lineBase, paint: { "line-color": COLORS.alert, "line-width": 6, "line-dasharray": [0.7, 1.3] } });
-    for (const id of ["route-other"]) m.on("click", id, (e) => { const k = e.features[0].properties.route; if (k) select(k); });
   }
   const fc = (features) => ({ type: "FeatureCollection", features });
   const line = (coords, props) => ({ type: "Feature", properties: props || {}, geometry: { type: "LineString", coordinates: coords } });
@@ -151,11 +154,11 @@
     const b = new maplibregl.LngLatBounds();
     for (const k of ["fastest", "preferred"]) for (const s of d[k].segments) for (const c of s.coords) b.extend(c);
     if (d.changes.previous) for (const k of ["fastest", "preferred"]) for (const s of d.changes.previous[k].segments) for (const c of s.coords) b.extend(c);
-    const top = $("trip").getBoundingClientRect().bottom + 16;
+    const top = $("trip").getBoundingClientRect().bottom + 48;
     const wide = window.innerWidth >= 700;
-    const bottom = wide ? 30 : $("sheet").getBoundingClientRect().height + 40;
+    const bottom = wide ? 30 : $("sheet").getBoundingClientRect().height + 72;
     const left = wide ? 460 : 30;
-    try { m.fitBounds(b, { padding: { top, bottom, left, right: 30 }, duration: 500, maxZoom: 16 }); } catch (_) { /* tiny viewport */ }
+    try { m.fitBounds(b, { padding: { top, bottom, left, right: 30 }, duration: 0, maxZoom: 16 }); } catch (_) { /* tiny viewport */ }
   }
 
   // ---------- rendering ----------
@@ -176,13 +179,15 @@
     let sub = km(r.length_m);
     if (kind === "preferred" && !d.identical) { const x = Math.round(d.extra_s / 60); sub += x >= 1 ? ` · <em>+${x} min</em>` : " · <em>same time</em>"; }
     if (d.identical) sub += " · fastest is also best lit";
-    const unk = r.lighting_share.unknown > 0.004 ? ` · ${pct(r.lighting_share.unknown)} unknown` : "";
+    const litPct = Math.round(r.lighting_share.yes * 100);
+    const unkPct = Math.max(0, 100 - litPct - Math.round(r.lighting_share.no * 100));
+    const unk = unkPct > 0 ? ` · ${unkPct}% unknown` : "";
     return `<button class="route ${cls}" data-route="${kind}" aria-pressed="${state.selected === kind || d.identical}">
       <span class="r-label"><i class="r-swatch"></i>${d.identical ? "Fastest &amp; best lit" : label}</span>
       <span class="r-eta">${r.minutes}<small>min</small></span>
       <span class="r-sub">${sub}</span>
       ${bar(r.lighting_share)}
-      <span class="r-lit"><b>${pct(r.lighting_share.yes)}</b> lit${unk}</span>
+      <span class="r-lit"><b>${litPct}%</b> lit${unk}</span>
     </button>`;
   }
   function explain(d) {
@@ -205,13 +210,14 @@
     if (!ch.entries.length) { el.hidden = true; return; }
     const en = ch.entries.find((e) => e.action === "close") || ch.entries[0];
     const tag = en.synthetic ? '<span class="tag tag-replay">REPLAY</span>' : '<span class="tag tag-live">LIVE</span>';
-    const what = en.action === "close" ? "closed to pedestrians" : "footway restricted";
+    const what = en.action === "close" ? "closed" : "footway restricted";
     const key = d.identical ? "preferred" : state.selected;
     const delta = ch[key + "_delta_s"] || 0;
+    const dtxt = Math.abs(delta) >= 30 ? `, ${delta > 0 ? "+" : "−"}${mins(delta)} min` : "";
     let sub;
-    if (ch.changed && ch[key + "_changed"]) sub = `Route changed${Math.abs(delta) >= 30 ? `, ${delta > 0 ? "+" : "−"}${mins(delta)} min` : ""}. Dotted line: previous route.`;
-    else if (ch.changed) sub = "The other route changed; this one is unaffected.";
-    else sub = "On your route; it stays walkable.";
+    if (ch.changed && ch[key + "_changed"]) sub = en.action === "close" ? `No way through on foot. Rerouted${dtxt}.` : `Rerouted${dtxt}.`;
+    else if (ch.changed) sub = "Other route changed; this one is unaffected.";
+    else sub = "On your route; still walkable.";
     el.innerHTML = `<span class="b-icon">${en.action === "close" ? "✕" : "!"}</span>
       <span><b>${tag}${esc(en.street || "Street")} ${what}</b><span class="b-sub">${sub}</span></span>
       <span class="b-more">Why?</span>`;
@@ -235,7 +241,7 @@
     const mode = o.mode === "replay" && o.active_entries ? "replay data" : "TfL feed";
     const n = o.active_entries;
     $("agent-chip-text").textContent = o.last_run_at
-      ? `Agent checked ${mode} ${ago(o.age_s)} · ${n ? n + " update" + (n > 1 ? "s" : "") + " active" : "no changes needed"}`
+      ? `Agent checked ${mode} ${ago(o.age_s)} · ${n ? n + " active" : "no changes"}`
       : "Agent has not run yet";
   }
   function render() {
@@ -283,6 +289,7 @@
     } catch (e) {
       if (seq !== reqSeq) return;
       state.data = null; state.lastError = e;
+      if (!e.code) { e.code = "network"; e.message = "We couldn't reach the route service. Check your connection and try again."; }
     }
     state.loading = false;
     render(); drawRoutes();
