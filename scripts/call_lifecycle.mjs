@@ -61,7 +61,7 @@ try {
   let s = await state();
   check("call is live", s.status === "live", `${tLive?.toFixed(1)} s, ${s.text || "avatar video"}, remote: ${s.remote.join(",")}`);
   check("microphone published, camera never requested", s.mic.length === 1 && s.mic[0] === "audio:live", s.mic.join(","));
-  await sleep(1500);
+  await sleep(6000);                                  // let the video reach full quality before the screenshot
   const shot = await send("Page.captureScreenshot", { format: "png" });
   mkdirSync(join(ROOT, "docs", "screenshots"), { recursive: true });
   writeFileSync(join(ROOT, "docs", "screenshots", "10-call-live.png"), Buffer.from(shot.data, "base64"));

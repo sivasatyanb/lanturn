@@ -557,10 +557,13 @@
       const { Room, RoomEvent } = window.LivekitClient;
       const room = new Room({ adaptiveStream: false });
       call.room = room;
-      room.on(RoomEvent.TrackSubscribed, (track) => {
+      room.on(RoomEvent.TrackSubscribed, (track, publication) => {
         if (stale()) return;
         track.attach($("call-video"));                            // audio and video on one element so they stay in sync
-        if (track.kind === "video") { clearTimeout(call.timer); clearTimeout(call.voiceTimer); setCall("live", ""); }
+        if (track.kind === "video") {
+          try { publication.setVideoQuality(window.LivekitClient.VideoQuality.HIGH); } catch (_) { /* single-layer track */ }
+          clearTimeout(call.timer); clearTimeout(call.voiceTimer); setCall("live", "");
+        }
         // If the companion can be heard but no avatar video follows, carry on as a voice call.
         else if (!call.voiceTimer) call.voiceTimer = setTimeout(() => { if (!stale() && call.status === "connecting") { clearTimeout(call.timer); setCall("live", "Voice only"); } }, 6000);
       });

@@ -40,8 +40,9 @@ valid for 20 hours from the run.
 | 1:25-1:48 | Tap the **video-call** button (top right). Wait for the avatar and its greeting. Ask aloud: **"Which way do I go first?"** Let it answer. Tap **hang up**. Tap **Exit navigation**. | (Let the avatar speak.) Then: "Walking alone at night is easier with company. This is a live Synthesia avatar, with Claude doing the talking, and it only repeats directions Lantern gave it. Hanging up leaves navigation open." |
 | 1:48-2:00 | README architecture diagram, then the Figma file (components and screens). | "Under it: an OpenStreetMap walking graph with a cost model we can explain weight by weight; Claude reads, plain code verifies; Databricks schedules, stores every decision and serves the result; and the interface is designed in Figma, with the app's colours and type generated from that file." |
 
-If the avatar is slow to appear (a cold start can take 20 to 40 seconds), keep recording and cut the wait, with
-a caption "avatar connecting, cut". Do not speed up the conversation itself.
+In testing the avatar appeared about three seconds after the tap and began its greeting straight away; the
+reply to a question began about four seconds after the question ended. If the avatar is slower to appear, keep
+recording and cut the wait with a caption "avatar connecting, cut". Do not speed up the conversation itself.
 
 ## Numbers to re-check on the morning (they change)
 

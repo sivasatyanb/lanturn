@@ -78,6 +78,13 @@ async def main() -> int:
     room = rtc.Room()
     agent_frames: asyncio.Queue = asyncio.Queue()
     seen: dict[str, str] = {}
+    video = {"frames": 0, "size": None, "first": None}
+
+    async def watch(track: rtc.Track) -> None:
+        async for ev in rtc.VideoStream(track):
+            video["frames"] += 1
+            video["size"] = (ev.frame.width, ev.frame.height)
+            video["first"] = video["first"] or time.time()
 
     async def pump(track: rtc.Track) -> None:
         async for ev in rtc.AudioStream(track, sample_rate=RATE, num_channels=1):
@@ -85,9 +92,13 @@ async def main() -> int:
 
     @room.on("track_subscribed")
     def _on_track(track, publication, participant):
-        seen[participant.identity] = seen.get(participant.identity, "") + f" {track.kind}"
+        kind = "audio" if track.kind == rtc.TrackKind.KIND_AUDIO else "video"
+        who = "avatar" if "avatar" in participant.identity else participant.identity.split("-")[0]
+        seen[who] = (seen.get(who, "") + " " + kind).strip()
         if track.kind == rtc.TrackKind.KIND_AUDIO:
             asyncio.create_task(pump(track))
+        else:
+            asyncio.create_task(watch(track))
 
     t0 = time.time()
     await room.connect(os.environ["LIVEKIT_URL"], token)
@@ -159,7 +170,12 @@ async def main() -> int:
                 result = 0
             else:
                 print("FAILED: the companion did not answer within 45 s")
-    print("participants and tracks seen:", {k: v.strip() for k, v in seen.items()})
+    print("participants and tracks seen:", seen)
+    if video["frames"]:
+        print(f"avatar video: {video['frames']} frames at {video['size'][0]}x{video['size'][1]}, "
+              f"first frame {video['first'] - t0:.1f} s after joining")
+    else:
+        print("avatar video: none received (voice-only call)")
     speaking.set()
     await mic_task
     await room.disconnect()

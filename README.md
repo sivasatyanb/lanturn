@@ -15,9 +15,9 @@ the first instruction taken from the real route; and, from there, start a video 
 
 Imperial AI Society Hackathon, 14-15 November 2026. Track: **Autonomous Agents**. Bounties: **Databricks**, **Figma**.
 
-| Compare routes (live data) | Arrive by, across midnight | Navigation preview | Agent replay (demo mode) |
+| Compare routes (live data) | Arrive by, across midnight | Navigation with the live companion | Agent replay (demo mode) |
 |---|---|---|---|
-| ![Two routes compared at 22:30](docs/screenshots/01-route-comparison.png) | ![Arrive by 00:30](docs/screenshots/05-arrive-by.png) | ![Navigation preview](docs/screenshots/06-navigation.png) | ![Replay closure applied](docs/screenshots/02-agent-update.png) |
+| ![Two routes compared at 22:30](docs/screenshots/01-route-comparison.png) | ![Arrive by 00:30](docs/screenshots/05-arrive-by.png) | ![Navigation preview with the companion call](docs/screenshots/10-call-live.png) | ![Replay closure applied](docs/screenshots/02-agent-update.png) |
 
 Lantern describes observed street conditions. It does not predict crime and does not say any route is safe.
 

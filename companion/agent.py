@@ -117,11 +117,15 @@ async def entrypoint(ctx: JobContext) -> None:
         for attempt in range(3):
             try:
                 await avatar.start(session, room=ctx.room)
+                log.info("avatar session started (avatar %s)", AVATAR_ID[:8])
                 break
-            except Exception as exc:  # noqa: BLE001 - never log the message: it can echo request details
+            except Exception as exc:  # noqa: BLE001 - never log the message or body: they can echo request details
                 retry = isinstance(exc, synthesia.SynthesiaError) and getattr(exc, "retryable", False)
-                log.warning("avatar start failed (attempt %d): %s%s", attempt + 1, type(exc).__name__,
-                            f" [{getattr(exc, 'type', '')}]" if isinstance(exc, synthesia.SynthesiaError) else "")
+                detail = ""
+                if isinstance(exc, synthesia.SynthesiaError):
+                    detail = (f" type={getattr(getattr(exc, 'type', None), 'name', getattr(exc, 'type', None))}"
+                              f" http_status={getattr(exc, 'status', None)} retryable={retry}")
+                log.warning("avatar start failed (attempt %d): %s%s", attempt + 1, type(exc).__name__, detail)
                 if not retry or attempt == 2:
                     log.warning("continuing as a voice-only call")
                     break
