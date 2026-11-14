@@ -13,7 +13,7 @@ changed after that and the last commit must be before 12:00.
 | Bounties entered | Databricks (track bounty). Figma, Best-Designed AI Product (open to all tracks; does not count towards the two). |
 | GitHub repository | [public repo URL] |
 | Demo video (max 2:00) | [video URL] |
-| Figma file or Figma Make link | [required if entering Figma; leave the bounty unticked if there is no file] |
+| Figma file or Figma Make link | https://www.figma.com/design/1GlEqbaZG7xphZQwJ98Tic (set sharing to "anyone with the link can view" first) |
 | Team members | [each person's full name, Luma signup email and university email, and add each to the Devpost project] |
 
 ## Inspiration
@@ -50,8 +50,10 @@ removed, and a failed run leaves the last good version in place.
 - **Databricks:** a scheduled serverless notebook job; Delta tables for the raw feed (bronze), validated records
   (silver), every decision with its evidence, every run, and immutable overlay versions; a Unity Catalog volume
   that serves the current version to the app; the Claude key in a secret scope.
-- **App:** a mobile web app (FastAPI + MapLibre GL, installable PWA) [designed in Figma: describe what was
-  designed there once the file exists].
+- **App and design:** a mobile web app (FastAPI + MapLibre GL, installable PWA). The route comparison flow is
+  designed in Figma as 35 variables, 12 text styles, 12 components and three screens, using the real route
+  geometry as editable vectors. The app's colours, radii, spacing and type are generated from the Figma
+  variables, so the file is the source of truth for the look (`docs/DESIGN.md`).
 
 ## Challenges we ran into
 
@@ -85,4 +87,4 @@ if night-time footfall estimates become available, fit the casualty model we des
 ## Built with
 
 python, fastapi, maplibre-gl, openstreetmap, databricks, delta-lake, unity-catalog, claude, anthropic-api,
-tfl-unified-api, figma [if used]
+tfl-unified-api, figma

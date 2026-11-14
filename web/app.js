@@ -3,7 +3,10 @@
   "use strict";
   const $ = (id) => document.getElementById(id);
   const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-  const COLORS = { fastest: "#62c6ff", preferred: "#ffc857", unlit: "#c07cff", unknown: "#7f8aa6", alert: "#ff7a6b" };
+  // Map colours come from the same design tokens as the rest of the UI (web/tokens.css, generated from Figma).
+  const token = (name, fallback) => getComputedStyle(document.documentElement).getPropertyValue(name).trim() || fallback;
+  const COLORS = { fastest: token("--fast", "#62c6ff"), preferred: token("--lit", "#ffc857"), unlit: token("--unlit", "#c07cff"), unknown: token("--unknown", "#7f8aa6"),
+    alert: token("--alert", "#ff7a6b"), onAlert: token("--on-alert", "#2b0d09"), casing: token("--casing", "#060a14"), prev: token("--prev", "#c9d1e6"), map: token("--map", "#0a0f1c") };
 
   const state = {
     config: null, from: null, to: null, timeKey: "now", customWhen: null,
@@ -64,7 +67,7 @@
 
   // ---------- map ----------
   const BASEMAP_URL = "https://tiles.openfreemap.org/styles/dark";
-  const BLANK_STYLE = { version: 8, sources: {}, layers: [{ id: "bg", type: "background", paint: { "background-color": "#0a0f1c" } }] };
+  const BLANK_STYLE = { version: 8, sources: {}, layers: [{ id: "bg", type: "background", paint: { "background-color": COLORS.map } }] };
   function initMap() {
     const b = state.config.bbox;
     let map;
@@ -85,7 +88,8 @@
     map.on("style.load", () => { state.mapReady = true; addLayers(); drawRoutes(); collapse(); });
     map.on("click", "route-other", (e) => { const k = e.features[0].properties.route; if (k) select(k); });
     fetch(BASEMAP_URL).then((r) => (r.ok ? r.json() : Promise.reject(new Error("basemap " + r.status))))
-      .then((style) => map.setStyle(style))
+      // diff:false forces a full style load, so "style.load" always fires and the route layers are re-added.
+      .then((style) => { state.mapReady = false; map.setStyle(style, { diff: false }); })
       .catch(() => { /* offline or blocked: keep the plain background */ });
   }
   function addLayers() {
@@ -94,11 +98,11 @@
     const empty = { type: "FeatureCollection", features: [] };
     for (const id of ["prev", "routes", "closed", "restricted"]) m.addSource(id, { type: "geojson", data: empty });
     const lineBase = { "line-cap": "round", "line-join": "round" };
-    m.addLayer({ id: "prev", type: "line", source: "prev", layout: lineBase, paint: { "line-color": "#c9d1e6", "line-width": 3, "line-opacity": 0.55, "line-dasharray": [0.6, 2] } });
+    m.addLayer({ id: "prev", type: "line", source: "prev", layout: lineBase, paint: { "line-color": COLORS.prev, "line-width": 3, "line-opacity": 0.6, "line-dasharray": [0.6, 2] } });
     m.addLayer({ id: "route-other", type: "line", source: "routes", filter: ["==", ["get", "sel"], 0], layout: lineBase,
       paint: { "line-color": ["get", "color"], "line-width": 5, "line-opacity": 0.8 } });
     m.addLayer({ id: "route-casing", type: "line", source: "routes", filter: ["==", ["get", "sel"], 1], layout: lineBase,
-      paint: { "line-color": "#060a14", "line-width": 10, "line-opacity": 0.9 } });
+      paint: { "line-color": COLORS.casing, "line-width": 10, "line-opacity": 0.9 } });
     m.addLayer({ id: "route-lit", type: "line", source: "routes", filter: ["all", ["==", ["get", "sel"], 1], ["==", ["get", "lit"], "yes"]], layout: lineBase,
       paint: { "line-color": ["get", "color"], "line-width": 6 } });
     m.addLayer({ id: "route-unlit", type: "line", source: "routes", filter: ["all", ["==", ["get", "sel"], 1], ["==", ["get", "lit"], "no"]], layout: lineBase,
@@ -106,14 +110,14 @@
     m.addLayer({ id: "route-unknown", type: "line", source: "routes", filter: ["all", ["==", ["get", "sel"], 1], ["==", ["get", "lit"], "unknown"]], layout: lineBase,
       paint: { "line-color": COLORS.unknown, "line-width": 6 } });
     m.addLayer({ id: "restricted", type: "line", source: "restricted", layout: lineBase, paint: { "line-color": COLORS.preferred, "line-width": 5, "line-opacity": 0.9, "line-dasharray": [0.4, 1.6] } });
-    m.addLayer({ id: "closed-casing", type: "line", source: "closed", layout: lineBase, paint: { "line-color": "#2b0d09", "line-width": 11 } });
+    m.addLayer({ id: "closed-casing", type: "line", source: "closed", layout: lineBase, paint: { "line-color": COLORS.onAlert, "line-width": 11 } });
     m.addLayer({ id: "closed", type: "line", source: "closed", layout: lineBase, paint: { "line-color": COLORS.alert, "line-width": 6, "line-dasharray": [0.7, 1.3] } });
   }
   const fc = (features) => ({ type: "FeatureCollection", features });
   const line = (coords, props) => ({ type: "Feature", properties: props || {}, geometry: { type: "LineString", coordinates: coords } });
   function drawRoutes() {
     const m = state.map, d = state.data;
-    if (!m || !state.mapReady) return;
+    if (!m || !state.mapReady || !m.getSource("routes")) return;   // redrawn on the next "style.load"
     state.markers.forEach((mk) => mk.remove()); state.markers = [];
     if (!d) { for (const id of ["prev", "routes", "closed", "restricted"]) m.getSource(id).setData(fc([])); return; }
     const feats = [];
@@ -238,7 +242,7 @@
     const d = state.data; if (!d) return;
     const o = d.overlay, dot = $("agent-dot");
     dot.className = "pulse" + (o.store_error ? " bad" : o.stale ? " warn" : "");
-    const mode = o.mode === "replay" && o.active_entries ? "replay data" : "TfL feed";
+    const mode = o.mode === "replay" && o.active_entries ? "replay" : "TfL";
     const n = o.active_entries;
     $("agent-chip-text").textContent = o.last_run_at
       ? `Agent checked ${mode} ${ago(o.age_s)} · ${n ? n + " active" : "no changes"}`
@@ -441,6 +445,9 @@
     renderTrip();
     if (window.maplibregl) initMap();
     await loadRoutes();
+    // Deep links used for documentation screenshots: ?open=why or ?open=agent
+    if (p.get("open") === "why") openChange();
+    if (p.get("open") === "agent") openAgent();
     setInterval(pollOverlay, 12000);
   })();
 })();

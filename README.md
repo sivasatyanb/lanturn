@@ -13,7 +13,7 @@ Imperial AI Society Hackathon, 14-15 November 2026. Track: **Autonomous Agents**
 
 | Route comparison (live) | After an agent update (replay) |
 |---|---|
-| ![Two routes compared at 22:30](docs/screenshots/01-route-comparison.jpg) | ![Route changed by a published closure](docs/screenshots/02-agent-update.jpg) |
+| ![Two routes compared at 22:30](docs/screenshots/01-route-comparison.png) | ![Route changed by a published closure](docs/screenshots/02-agent-update.png) |
 
 Lantern describes observed street conditions. It does not predict crime and does not say any route is safe.
 
@@ -51,6 +51,9 @@ flowchart LR
 - **Overlay** (`lantern/overlay.py`): the contract between agent and app. A versioned JSON document listing
   segments to close or penalise, each with source, evidence quote, validity window and the test results that gated it.
 - **App** (`web/`, `lantern/api.py`): map-first mobile web app (installable PWA). It only reads.
+- **Design** ([Figma file](https://www.figma.com/design/1GlEqbaZG7xphZQwJ98Tic), `docs/DESIGN.md`): variables,
+  12 components and three screens for the route comparison flow. The app's colours, radii, spacing and type are
+  generated from the Figma variables (`design/figma-tokens.json` to `web/tokens.css`).
 
 ## Run it
 
@@ -69,10 +72,12 @@ store under `var/` and the built graph in `data/processed/`, so it works offline
 python scripts/agent_run.py --replay 1     # run the agent on the replay scenario (local store)
 python scripts/agent_run.py --replay 2     # the burst main is fixed: closure withdrawn
 python scripts/agent_run.py                # run on the live TfL feed
-python -m pytest -q                        # 45 tests, no network
+python -m pytest -q                        # 47 tests, no network
 python scripts/sensitivity.py              # regenerate docs/SENSITIVITY.md
 python scripts/eval_agent.py               # regenerate docs/EVALUATION.md (calls Claude, about $1.60)
 python scripts/setup_data.py               # rebuild the graph from OpenStreetMap
+python scripts/build_tokens.py             # regenerate web/tokens.css from the Figma token export
+node scripts/capture_screens.mjs 01-route-comparison "t=2230"   # phone-size screenshot via headless Chrome
 ```
 
 ### Configuration
@@ -189,7 +194,7 @@ locally in case Databricks is unreachable.
 
 | Check | Result | Where |
 |---|---|---|
-| Automated tests (routing validity, event matching, expiry, withdrawal, failed updates, gate, API) | 45 pass, no network | `tests/` |
+| Automated tests (routing validity, event matching, expiry, withdrawal, failed updates, gate, API, store) | 47 pass, no network | `tests/` |
 | Agent judgment vs hand labels, 113 real + 8 synthetic records | 121/121 on the actionable decision; 11/11 quotes verbatim; 16/16 same on a second pass | `docs/EVALUATION.md` |
 | Databricks end to end | live and replay runs published to Delta and read back by the app | `python scripts/databricks_deploy.py status` |
 | Sensitivity of recommendations | see above | `docs/SENSITIVITY.md` |
@@ -225,7 +230,7 @@ The evaluation's limits are stated in the document: one feed snapshot, few posit
 - Disruptions: Powered by TfL Open Data. Contains OS data © Crown copyright and database rights 2016 and Geomni
   UK Map data © and database rights [2019].
 - Park hours: The Royal Parks. Basemap: OpenFreeMap, © OpenMapTiles, data © OpenStreetMap contributors.
-- Map rendering: MapLibre GL JS.
+- Map rendering: MapLibre GL JS. Typeface: Inter (SIL Open Font License), loaded from Google Fonts.
 - Built during the hackathon with Claude Code as the implementation agent; the agent's judgment step uses the
   Claude API (`claude-opus-5-5`).
 
@@ -237,7 +242,8 @@ lantern/agent/      assess (Claude), match (location), validate (gate), run (orc
 web/                mobile web app (no build step)
 databricks/         job notebook and connectivity probes
 scripts/            data setup, agent runs, Databricks deploy, sensitivity, evaluation
-tests/              45 tests
+tests/              47 tests
+design/             token export from the Figma file
 data/               built graph and fixtures (see docs/DATA.md)
-docs/               MODEL, DATA, SENSITIVITY, EVALUATION, DEMO_SCRIPT, DEVPOST
+docs/               MODEL, DATA, DESIGN, SENSITIVITY, EVALUATION, DEMO_SCRIPT, DEVPOST
 ```

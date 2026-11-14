@@ -57,13 +57,21 @@ def published(force: bool = False) -> dict:
             hb = st.read_heartbeat()
             _state.update(overlay=ov, heartbeat=hb, error=None, source=st.kind)
         except Exception as exc:  # noqa: BLE001 - keep serving the last good overlay
-            _state["error"] = f"{type(exc).__name__}: {str(exc)[:160]}"
+            _state["error"] = _safe_error(exc)
             if _state["overlay"] is None:
                 cached = getattr(st, "cache", None)
                 ov = (cached.read_published() if cached else None) or empty_overlay()
                 _state.update(overlay=ov, source=f"{st.kind}-cache")
         _state["fetched"] = time.time()
         return _state["overlay"]
+
+
+def _safe_error(exc: Exception) -> str:
+    """Short error text for the UI, with any URL or host removed."""
+    import re
+
+    msg = re.sub(r"https?://\S+", "[url]", str(exc))
+    return f"{type(exc).__name__}: {msg[:140]}"
 
 
 def _parse_place(s: str) -> tuple[tuple[float, float], dict]:

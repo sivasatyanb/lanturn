@@ -90,6 +90,27 @@ class LocalStore:
         return [json.loads(x) for x in lines[-n:]][::-1]
 
 
+def _token_expiry(tok: dict) -> float:
+    """Epoch seconds at which a `databricks auth token` result expires (conservative)."""
+    from datetime import datetime
+
+    exp = tok.get("expiry")
+    if exp:
+        try:
+            # Go prints nanoseconds; Python accepts at most microseconds.
+            head, _, tail = exp.partition(".")
+            if tail:
+                frac = "".join(ch for ch in tail if ch.isdigit())
+                zone = tail[len(frac):] or "+00:00"
+                exp = f"{head}.{frac[:6]}{zone}"
+            return datetime.fromisoformat(exp.replace("Z", "+00:00")).timestamp()
+        except ValueError:
+            pass
+    if tok.get("expires_in"):
+        return time.time() + float(tok["expires_in"])
+    return time.time() + 300          # unknown: re-mint within five minutes
+
+
 class DatabricksVolumeStore:
     """Read-only view of what the Databricks job published (Files API on a UC volume).
 
@@ -116,13 +137,15 @@ class DatabricksVolumeStore:
             return str(p)
         return "databricks"
 
-    def _auth(self) -> tuple[str, str]:
-        if self._token is None or self._token[1] < time.time() + 60:
+    def _auth(self, force: bool = False) -> tuple[str, str]:
+        """(host, bearer token). The CLI hands back its cached token, which may be close to
+        expiry, so we honour the token's own expiry time and never assume a lifetime."""
+        if force or self._token is None or self._token[1] < time.time() + 120:
             env = dict(os.environ, MSYS_NO_PATHCONV="1")
             out = subprocess.run([self._cli(), "auth", "token", "--profile", self.profile],
                                  capture_output=True, text=True, timeout=30, env=env, check=True)
             tok = json.loads(out.stdout)
-            self._token = (tok["access_token"], time.time() + int(tok.get("expires_in", 1800)))
+            self._token = (tok["access_token"], _token_expiry(tok))
             if self._host is None:
                 env_out = subprocess.run([self._cli(), "auth", "env", "--profile", self.profile],
                                          capture_output=True, text=True, timeout=30, env=env, check=True)
@@ -132,14 +155,19 @@ class DatabricksVolumeStore:
     def _get_json(self, name: str) -> Any | None:
         import requests
 
-        host, token = self._auth()
-        r = requests.get(f"{host}/api/2.0/fs/files{self.volume}/{name}",
-                         headers={"Authorization": f"Bearer {token}",
-                                  "User-Agent": HTTP_HEADERS["User-Agent"]}, timeout=20)
-        if r.status_code == 404:
-            return None
-        r.raise_for_status()
-        return r.json()
+        for attempt in (1, 2):
+            host, token = self._auth(force=attempt == 2)
+            r = requests.get(f"{host}/api/2.0/fs/files{self.volume}/{name}",
+                             headers={"Authorization": f"Bearer {token}",
+                                      "User-Agent": HTTP_HEADERS["User-Agent"]}, timeout=20)
+            if r.status_code in (401, 403) and attempt == 1:
+                continue                      # token rejected: mint a new one and retry once
+            if r.status_code == 404:
+                return None
+            if r.status_code >= 400:
+                # Never include the workspace URL in the message: it reaches the browser.
+                raise RuntimeError(f"Databricks Files API returned {r.status_code} for {name}")
+            return r.json()
 
     def read_published(self) -> dict | None:
         doc = self._get_json("overlay_latest.json")
