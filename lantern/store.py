@@ -191,3 +191,18 @@ def get_store(kind: str | None = None):
     if kind == "databricks":
         return DatabricksVolumeStore()
     return LocalStore()
+
+
+DEMO_VOLUME = "/Volumes/workspace/lantern_demo/published"
+
+
+def get_demo_store(kind: str | None = None):
+    """Where the labelled replay publishes. Separate from the live store end to end (its own
+    Databricks job, schema and volume), so the live schedule cannot overwrite a replay and a
+    replay cannot reach normal planning."""
+    kind = kind or os.environ.get("LANTERN_STORE", "local")
+    if kind == "databricks":
+        return DatabricksVolumeStore(
+            volume_path=os.environ.get("LANTERN_DEMO_VOLUME", DEMO_VOLUME),
+            cache_dir=VAR_DIR / "databricks_cache_demo")
+    return LocalStore(VAR_DIR / "store_demo")

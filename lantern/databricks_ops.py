@@ -15,8 +15,16 @@ JOB_NAME = "lantern-agent"
 WORKSPACE_ROOT = "/Shared/lantern"
 NOTEBOOK_PATH = WORKSPACE_ROOT + "/lantern_agent_job"
 
+# The demo (replay) path is a second job with its own notebook copy, schema, tables and volume.
+# Nothing that targets "demo" ever modifies the live job above.
+DEMO_JOB_NAME = "lantern-agent-demo"
+DEMO_SCHEMA = "lantern_demo"
+DEMO_WORKSPACE_ROOT = "/Shared/lantern_demo"
+DEMO_NOTEBOOK_PATH = DEMO_WORKSPACE_ROOT + "/lantern_agent_job"
+
 _store: DatabricksVolumeStore | None = None
-_job_id: int | None = None
+_demo_store: DatabricksVolumeStore | None = None
+_job_ids: dict[str, int | None] = {}
 
 
 def _auth() -> tuple[str, str]:
@@ -24,6 +32,17 @@ def _auth() -> tuple[str, str]:
     if _store is None:
         _store = DatabricksVolumeStore()
     return _store._auth()
+
+
+def _published(target: str) -> DatabricksVolumeStore:
+    global _demo_store
+    _auth()
+    if target == "demo":
+        if _demo_store is None:
+            from .store import get_demo_store
+            _demo_store = get_demo_store("databricks")
+        return _demo_store
+    return _store
 
 
 def call(method: str, path: str, body: dict | None = None, params: dict | None = None) -> Any:
@@ -38,12 +57,12 @@ def call(method: str, path: str, body: dict | None = None, params: dict | None =
     return r.json() if r.text else {}
 
 
-def find_job() -> int | None:
-    global _job_id
-    if _job_id is None:
-        jobs = call("GET", "/api/2.2/jobs/list", params={"name": JOB_NAME}).get("jobs", [])
-        _job_id = jobs[0]["job_id"] if jobs else None
-    return _job_id
+def find_job(target: str = "live") -> int | None:
+    if _job_ids.get(target) is None:
+        name = DEMO_JOB_NAME if target == "demo" else JOB_NAME
+        jobs = call("GET", "/api/2.2/jobs/list", params={"name": name}).get("jobs", [])
+        _job_ids[target] = jobs[0]["job_id"] if jobs else None
+    return _job_ids[target]
 
 
 def job_settings(paused: bool = True, interval_min: int = 30) -> dict:
@@ -66,36 +85,69 @@ def job_settings(paused: bool = True, interval_min: int = 30) -> dict:
     }
 
 
+def demo_job_settings() -> dict:
+    """The replay job: same notebook code, isolated schema, no schedule (run on demand)."""
+    return {
+        "name": DEMO_JOB_NAME,
+        "description": "Lantern demo path: replays the captured TfL feed plus labelled synthetic "
+                       "records through the same agent, into its own schema and volume.",
+        "max_concurrent_runs": 1,
+        "tasks": [{
+            "task_key": "agent_run",
+            "notebook_task": {"notebook_path": DEMO_NOTEBOOK_PATH,
+                              "base_parameters": {"mode": "replay", "replay_step": "1",
+                                                  "schema": DEMO_SCHEMA}},
+            "timeout_seconds": 900,
+            "max_retries": 0,
+        }],
+        "tags": {"project": "lantern", "path": "demo"},
+    }
+
+
 def upsert_job(paused: bool = True, interval_min: int = 30) -> int:
-    global _job_id
     settings = job_settings(paused, interval_min)
     jid = find_job()
     if jid is None:
-        _job_id = call("POST", "/api/2.2/jobs/create", settings)["job_id"]
+        _job_ids["live"] = call("POST", "/api/2.2/jobs/create", settings)["job_id"]
     else:
         call("POST", "/api/2.2/jobs/reset", {"job_id": jid, "new_settings": settings})
-    return _job_id
+    return _job_ids["live"]
 
 
-def trigger_job(mode: str = "live", step: str | None = None) -> dict:
-    jid = find_job()
+def upsert_demo_job() -> int:
+    settings = demo_job_settings()
+    jid = find_job("demo")
     if jid is None:
-        raise RuntimeError("Databricks job 'lantern-agent' not found; run scripts/databricks_deploy.py")
-    res = call("POST", "/api/2.2/jobs/run-now", {
-        "job_id": jid, "notebook_params": {"mode": mode, "replay_step": step or "1"}})
-    return {"started": True, "running": True, "where": "databricks", "run_id": res.get("run_id")}
+        _job_ids["demo"] = call("POST", "/api/2.2/jobs/create", settings)["job_id"]
+    else:
+        call("POST", "/api/2.2/jobs/reset", {"job_id": jid, "new_settings": settings})
+    return _job_ids["demo"]
 
 
-def latest_run() -> dict | None:
-    jid = find_job()
+def trigger_job(mode: str = "live", step: str | None = None, target: str = "live") -> dict:
+    if (mode == "replay") != (target == "demo"):
+        raise RuntimeError("replay runs only on the demo job, live runs only on the live job")
+    jid = find_job(target)
+    if jid is None:
+        raise RuntimeError(f"Databricks {target} job not found; run scripts/databricks_deploy.py")
+    params = {"mode": mode, "replay_step": step or "1"}
+    if target == "demo":
+        params["schema"] = DEMO_SCHEMA
+    res = call("POST", "/api/2.2/jobs/run-now", {"job_id": jid, "notebook_params": params})
+    return {"started": True, "running": True, "where": "databricks", "source": target,
+            "run_id": res.get("run_id")}
+
+
+def latest_run(target: str = "live") -> dict | None:
+    jid = find_job(target)
     if jid is None:
         return None
     runs = call("GET", "/api/2.2/jobs/runs/list", params={"job_id": jid, "limit": 1}).get("runs", [])
     return runs[0] if runs else None
 
 
-def job_status() -> dict:
-    r = latest_run()
+def job_status(target: str = "live") -> dict:
+    r = latest_run(target)
     if not r:
         return {"running": False, "last": None, "where": "databricks"}
     st = r.get("state", {})
@@ -104,7 +156,7 @@ def job_status() -> dict:
     if not running:
         hb = None
         try:
-            hb = _store.read_heartbeat() if _store else None
+            hb = _published(target).read_heartbeat()
         except Exception:  # noqa: BLE001
             hb = None
         last = {"status": (hb or {}).get("status") or st.get("result_state", "").lower(),

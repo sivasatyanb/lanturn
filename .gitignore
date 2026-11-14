@@ -11,3 +11,4 @@ node_modules/
 .databrickscfg
 *.log
 .DS_Store
+.venv-agent/

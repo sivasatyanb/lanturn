@@ -5,6 +5,7 @@ import heapq
 from datetime import datetime, timezone
 from typing import Any
 
+from . import navigation
 from .access import ZONE_LABELS, closed_zones, is_dark
 from .cost import DEFAULT_WEIGHTS, EdgeFeatures, Weights
 from .graph import Graph
@@ -137,7 +138,8 @@ def summarise(g: Graph, feat: EdgeFeatures, ctx: Context, path: list[int], src: 
     zones: dict[str, float] = {}
     steps = 0
     segments: list[dict] = []
-    for ei, coords in _oriented_coords(g, path, src):
+    oriented = _oriented_coords(g, path, src)
+    for ei, coords in oriented:
         e = g.edges[ei]
         for k in feat.x:
             expo_s[k] += tau[ei] * feat.x[k][ei]
@@ -176,6 +178,7 @@ def summarise(g: Graph, feat: EdgeFeatures, ctx: Context, path: list[int], src: 
                   for z, m in zones.items()],
         "steps": steps,
         "segments": segments,
+        "nav": navigation.build([(g.edges[ei], coords) for ei, coords in oriented]),
         "edge_ids": [g.edges[i]["id"] for i in path],
     }
 
