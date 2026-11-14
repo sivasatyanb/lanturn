@@ -48,75 +48,19 @@
     ["size/touch-target", "--touch", "FLOAT", "44"]
   ],
   "text_styles": [
-    ["Display/ETA", "Inter", "Bold",
-      28,
-      31,
-      -0.5
-    ],
-    ["Title/Sheet", "Inter", "Bold",
-      17,
-      22,
-      0
-    ],
-    ["Title/Place", "Inter", "Semi Bold",
-      15,
-      20,
-      0
-    ],
-    ["Label/Route", "Inter", "Bold",
-      12.5,
-      16,
-      0
-    ],
-    ["Label/Chip", "Inter", "Semi Bold",
-      13,
-      16,
-      0
-    ],
-    ["Label/Overline", "Inter", "Medium",
-      11,
-      14,
-      0.4
-    ],
-    ["Label/Tag", "Inter", "Extra Bold",
-      10,
-      12,
-      0.6
-    ],
-    ["Body/Default", "Inter", "Regular",
-      13,
-      18,
-      0
-    ],
-    ["Body/Strong", "Inter", "Bold",
-      13.5,
-      17,
-      0
-    ],
-    ["Body/Small", "Inter", "Regular",
-      12,
-      16,
-      0
-    ],
-    ["Body/Micro", "Inter", "Regular",
-      10.5,
-      14,
-      0
-    ],
-    ["Body/Quote", "Inter", "Italic",
-      13,
-      18,
-      0
-    ],
-    ["Label/Button", "Inter", "Bold",
-      17,
-      22,
-      0
-    ],
-    ["Display/Nav", "Inter", "Extra Bold",
-      30,
-      34,
-      -0.5
-    ]
+    ["Display/ETA", "Inter", "Bold", 28, 31, -0.5],
+    ["Title/Sheet", "Inter", "Bold", 17, 22, 0],
+    ["Title/Place", "Inter", "Semi Bold", 15, 20, 0],
+    ["Label/Route", "Inter", "Bold", 12.5, 16, 0],
+    ["Label/Chip", "Inter", "Semi Bold", 13, 16, 0],
+    ["Label/Overline", "Inter", "Medium", 11, 14, 0.4],
+    ["Label/Tag", "Inter", "Extra Bold", 10, 12, 0.6],
+    ["Body/Default", "Inter", "Regular", 13, 18, 0],
+    ["Body/Strong", "Inter", "Bold", 13.5, 17, 0],
+    ["Body/Small", "Inter", "Regular", 12, 16, 0],
+    ["Body/Micro", "Inter", "Regular", 10.5, 14, 0],
+    ["Body/Quote", "Inter", "Italic", 13, 18, 0],
+    ["Label/Button", "Inter", "Bold", 17, 22, 0],
+    ["Display/Nav", "Inter", "Extra Bold", 30, 34, -0.5]
   ]
 }

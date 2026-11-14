@@ -9,11 +9,15 @@ it does not know. Behind it, an agent running on Databricks reads Transport for 
 30 minutes, works out which records actually affect someone on foot, proves it against the source text and the
 map, reruns a set of test journeys, and only then publishes a routing update that the app picks up by itself.
 
+She can leave now, leave at a time, or ask to arrive by a time; press **Start!** for a navigation preview with
+the first instruction taken from the real route; and, from there, start a video call with a walking companion
+(a live Synthesia avatar) who keeps her company on the way. The companion is a separate feature from the agent.
+
 Imperial AI Society Hackathon, 14-15 November 2026. Track: **Autonomous Agents**. Bounties: **Databricks**, **Figma**.
 
-| Route comparison (live) | After an agent update (replay) |
-|---|---|
-| ![Two routes compared at 22:30](docs/screenshots/01-route-comparison.png) | ![Route changed by a published closure](docs/screenshots/02-agent-update.png) |
+| Compare routes (live data) | Arrive by, across midnight | Navigation preview | Agent replay (demo mode) |
+|---|---|---|---|
+| ![Two routes compared at 22:30](docs/screenshots/01-route-comparison.png) | ![Arrive by 00:30](docs/screenshots/05-arrive-by.png) | ![Navigation preview](docs/screenshots/06-navigation.png) | ![Replay closure applied](docs/screenshots/02-agent-update.png) |
 
 Lantern describes observed street conditions. It does not predict crime and does not say any route is safe.
 
@@ -51,9 +55,17 @@ flowchart LR
 - **Overlay** (`lantern/overlay.py`): the contract between agent and app. A versioned JSON document listing
   segments to close or penalise, each with source, evidence quote, validity window and the test results that gated it.
 - **App** (`web/`, `lantern/api.py`): map-first mobile web app (installable PWA). It only reads.
+- **Timing** (`lantern/timing.py`): Leave now, Leave at and Arrive by on a 24-hour London clock. Arrive by
+  searches for the latest departure whose own route still arrives on time, because closures make a route's
+  duration depend on when you set off, and re-checks the answer against the router.
+- **Navigation preview** (`lantern/navigation.py`): start heading and turn instructions derived from the route's
+  geometry and OpenStreetMap street names. The position stays at the start; it is a preview, not live guidance.
+- **Walking companion** (`lantern/companion.py`, `companion/`): a live avatar video call inside navigation.
+  See "Walking companion" below.
 - **Design** ([Figma file](https://www.figma.com/design/1GlEqbaZG7xphZQwJ98Tic), `docs/DESIGN.md`): variables,
-  12 components and three screens for the route comparison flow. The app's colours, radii, spacing and type are
-  generated from the Figma variables (`design/figma-tokens.json` to `web/tokens.css`).
+  components and screens for planning, navigation and the agent evidence. The app's colours (including the
+  basemap), radii, spacing and type are generated from the Figma variables (`design/figma-tokens.json` to
+  `web/tokens.css`).
 
 ## Run it
 
@@ -65,14 +77,22 @@ python -m venv .venv
 .venv/Scripts/python -m uvicorn lantern.api:app --port 8000
 ```
 
-Open http://localhost:8000 (add `?t=2230` for a 22:30 departure). With no configuration the app uses a local
-store under `var/` and the built graph in `data/processed/`, so it works offline apart from map tiles.
+Open http://localhost:8000. With no configuration the app uses a local store under `var/` and the built graph
+in `data/processed/`, so it works offline apart from map tiles.
+
+| Link | What it opens |
+|---|---|
+| `/` | normal planning on the **live** overlay |
+| `/?t=2230` | leave at 22:30 |
+| `/?arrive=0030` | arrive by 00:30 |
+| `/?demo=1` | **demo mode**: the labelled replay data path (see Databricks below) |
+| `/?demo=1&open=agent` | demo mode with the agent's decisions open |
 
 ```bash
 python scripts/agent_run.py --replay 1     # run the agent on the replay scenario (local store)
 python scripts/agent_run.py --replay 2     # the burst main is fixed: closure withdrawn
 python scripts/agent_run.py                # run on the live TfL feed
-python -m pytest -q                        # 47 tests, no network
+python -m pytest -q                        # 67 tests, no network
 python scripts/sensitivity.py              # regenerate docs/SENSITIVITY.md
 python scripts/eval_agent.py               # regenerate docs/EVALUATION.md (calls Claude, about $1.60)
 python scripts/setup_data.py               # rebuild the graph from OpenStreetMap
@@ -91,6 +111,9 @@ Copy `.env.example` to `.env` (git-ignored). Nothing secret is ever committed, l
 | `LANTERN_STORE` | `.env` | `local` (default) or `databricks` to read the overlay the Databricks job published. |
 | `DATABRICKS_PROFILE` | `.env` | Name of the Databricks CLI profile (OAuth, `databricks auth login`). No token is stored. |
 | `lantern/anthropic_api_key` | Databricks secret scope | Claude key for the scheduled job. |
+| `LIVEKIT_URL`, `LIVEKIT_API_KEY`, `LIVEKIT_API_SECRET` | `.env` | LiveKit project for the companion call: room tokens, speech recognition and voice. |
+| `SYNTHESIA_API_KEY` | `.env` | Synthesia key with the "Interactive Avatars (write)" scope. Read only by the companion worker. |
+| `SYNTHESIA_AVATAR_ID`, `COMPANION_VOICE_ID`, `COMPANION_LLM_MODEL` | `.env`, optional | Avatar, voice and Claude model for the companion (defaults in `companion/agent.py`). |
 
 ## The routing model
 
@@ -162,10 +185,39 @@ One run (`lantern/agent/run.py`) does this, the same code locally and in the Dat
 | Feed down, feed truncated, exception anywhere | run `failed`, previous version stays published |
 | Claude unavailable | already-verified unchanged entries are carried; new records are held |
 
+## Walking companion
+
+Inside the navigation preview, the video-call button starts a live call with an avatar who greets the walker,
+reads out Lantern's first instruction and then chats. Guidance stays on screen: the companion is given only the
+directions Lantern computed and is told to use nothing else if asked about the route.
+
+| Part | Provided by | Credentials |
+|---|---|---|
+| Room, media transport | LiveKit | `LIVEKIT_*` |
+| Speech recognition and voice | LiveKit Inference (Deepgram Nova 3, Cartesia Sonic) | `LIVEKIT_*`, no extra keys |
+| Conversation | Claude, through the LiveKit Anthropic plugin | `ANTHROPIC_API_KEY` |
+| Avatar video | Synthesia Interactive Avatar API, joins the room as a participant | `SYNTHESIA_API_KEY` |
+
+The browser asks for the microphone when the call button is tapped (the camera is never requested), then
+receives a room URL and a token that can join one room for fifteen minutes. All keys stay on the server and in
+the worker. Hanging up leaves navigation open; leaving navigation ends the call and releases the microphone.
+If the microphone is refused or the service is unavailable, the app says so, offers Retry, and carries on working.
+
+```bash
+# one-time: the worker needs its own virtualenv (see companion/README.md)
+.venv-agent/Scripts/python companion/check.py        # checks LiveKit, speech, voice and Claude; prints no secrets
+.venv-agent/Scripts/python companion/agent.py dev    # run the worker next to the app
+```
+
 ## Databricks
 
 The agent is a scheduled serverless notebook job (`databricks/lantern_agent_job.py`, job `lantern-agent`,
 every 30 minutes). Everything the app knows about disruptions comes from what this job writes.
+
+**Two data paths, kept apart.** Normal planning reads only the live path. The labelled replay used for judging
+runs on its own job, `lantern-agent-demo`, with the same notebook code but its own schema
+(`workspace.lantern_demo`: tables, `published` volume, `code` volume). The scheduled live job cannot overwrite a
+replay, and replay data cannot reach normal planning. The app shows the replay path only in demo mode (`?demo=1`).
 
 | Object in `workspace.lantern` | Contents |
 |---|---|
@@ -183,8 +235,12 @@ databricks secrets create-scope lantern --profile walknight
 databricks secrets put-secret lantern anthropic_api_key --profile walknight
 python scripts/databricks_deploy.py deploy --unpause    # upload bundle + notebook, create the scheduled job
 python scripts/databricks_deploy.py run --wait          # one live run now
-python scripts/databricks_deploy.py run --replay 1 --wait
 python scripts/databricks_deploy.py status              # last run, published overlay, run counts
+
+python scripts/databricks_deploy.py deploy-demo         # create the isolated replay path (schema lantern_demo, job lantern-agent-demo)
+python scripts/databricks_deploy.py run --replay 1 --wait   # replay: burst main closes Exhibition Road (demo job only)
+python scripts/databricks_deploy.py run --replay 2 --wait   # replay: main fixed, closure withdrawn
+python scripts/databricks_deploy.py status --demo
 ```
 
 Set `LANTERN_STORE=databricks` in `.env` and the app reads the published volume, caching the last good overlay
@@ -194,9 +250,10 @@ locally in case Databricks is unreachable.
 
 | Check | Result | Where |
 |---|---|---|
-| Automated tests (routing validity, event matching, expiry, withdrawal, failed updates, gate, API, store) | 47 pass, no network | `tests/` |
+| Automated tests (routing validity, event matching, expiry, withdrawal, failed updates, gate, API, store, arrive-by against the router, turn instructions, live/demo separation, companion tokens) | 67 pass, no network | `tests/` |
 | Agent judgment vs hand labels, 113 real + 8 synthetic records | 121/121 on the actionable decision; 11/11 quotes verbatim; 16/16 same on a second pass | `docs/EVALUATION.md` |
-| Databricks end to end | live and replay runs published to Delta and read back by the app | `python scripts/databricks_deploy.py status` |
+| Databricks end to end | live and replay runs published to Delta and read back by the app, on separate paths | `python scripts/databricks_deploy.py status [--demo]` |
+| Companion dependencies | LiveKit, speech recognition, voice and Claude checked without a browser | `companion/check.py` |
 | Sensitivity of recommendations | see above | `docs/SENSITIVITY.md` |
 
 The evaluation's limits are stated in the document: one feed snapshot, few positives, labels that are not blind.
@@ -207,9 +264,11 @@ The evaluation's limits are stated in the document: one feed snapshot, few posit
   job, tables and schedule; every route the app draws.
 - **Simulated:** the eight `REPLAY-*` records in `data/fixtures/replay_scenario.json` are synthetic, written in TfL's
   phrasing and placed on real streets, because the live feed contained no pedestrian-relevant event in the demo area
-  during the hackathon. Replay runs are marked `mode: replay` in the overlay, tagged REPLAY in the app and
-  SYNTHETIC in the decision log, and a live run withdraws them.
-- **Not built:** turn-by-turn navigation, live location, accounts, arbitrary start points (the app offers eight
+  during the hackathon. Replay runs publish only to the demo path, are marked `mode: replay` in the overlay,
+  tagged REPLAY in the app (demo mode only) and SYNTHETIC in the decision log.
+- **Preview only:** navigation shows the start of the selected route with the first instruction and fixed time,
+  distance and ETA. The position does not move.
+- **Not built:** live location and turn-by-turn progress, accounts, arbitrary start points (the app offers eight
   named places), and any use of crime or casualty data in the score.
 
 ## Limitations
@@ -231,18 +290,21 @@ The evaluation's limits are stated in the document: one feed snapshot, few posit
   UK Map data © and database rights [2019].
 - Park hours: The Royal Parks. Basemap: OpenFreeMap, © OpenMapTiles, data © OpenStreetMap contributors.
 - Map rendering: MapLibre GL JS. Typeface: Inter (SIL Open Font License), loaded from Google Fonts.
+- Walking companion: Synthesia Interactive Avatar API, LiveKit (transport, speech recognition and voice through
+  LiveKit Inference), and the Claude API for conversation.
 - Built during the hackathon with Claude Code as the implementation agent; the agent's judgment step uses the
   Claude API (`claude-opus-5-5`).
 
 ## Repository layout
 
 ```
-lantern/            package: graph, cost model, routing, overlay, TfL client, API, stores
+lantern/            package: graph, cost model, routing, timing, navigation, overlay, TfL client, API, stores
 lantern/agent/      assess (Claude), match (location), validate (gate), run (orchestration), replay
-web/                mobile web app (no build step)
+companion/          walking-companion agent worker (LiveKit + Synthesia + Claude) and its dependency check
+web/                mobile web app (no build step): app.js, mapstyle.js, styles.css, generated tokens.css
 databricks/         job notebook and connectivity probes
 scripts/            data setup, agent runs, Databricks deploy, sensitivity, evaluation
-tests/              47 tests
+tests/              67 tests
 design/             token export from the Figma file
 data/               built graph and fixtures (see docs/DATA.md)
 docs/               MODEL, DATA, DESIGN, SENSITIVITY, EVALUATION, DEMO_SCRIPT, DEVPOST

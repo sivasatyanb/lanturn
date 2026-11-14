@@ -1,60 +1,88 @@
-# Two-minute demo video script
+# Two-minute demo video script (V2)
 
 Format the organisers ask for: screen recording with voice-over, no intro, no music, one real run from start to
 finish, say what is automated and what is mocked, label sped-up sections. Hard cut at 2:00.
 
-## Before recording
+Recorded in desktop Chrome with the device toolbar at 390 x 844. The story stays centred on the agent:
+live TfL feed, Databricks, verified routing update. The walking companion is a separate feature shown at the end.
 
-1. `python scripts/databricks_deploy.py run --wait` so the published overlay is a clean live version with no entries.
-2. Start the app (`python -m uvicorn lantern.api:app --port 8000`) and open `http://localhost:8000/?t=2230`
-   in a 390 px wide browser window (Chrome DevTools device toolbar, iPhone 14).
-3. Open the Databricks job page (Jobs & Pipelines > `lantern-agent`) in a second window, and a SQL editor tab with
-   `SELECT event_id, decision, evidence, reason FROM workspace.lantern.agent_decisions ORDER BY decided_at DESC LIMIT 12`.
-4. Have `python scripts/databricks_deploy.py status` output on screen once, for the run count.
-5. Open the Figma file (link in `docs/DESIGN.md`) on the "Route comparison flow" page.
+## Set up (10 minutes before recording)
 
-## Script
+1. **Terminal 1, the app:** `.venv/Scripts/python -m uvicorn lantern.api:app --port 8000`
+2. **Terminal 2, the companion worker:** `.venv-agent/Scripts/python companion/agent.py dev`
+   First run `.venv-agent/Scripts/python companion/check.py`; all five lines must say ok or present.
+3. **Reset the replay** so the demo starts without the closure:
+   `.venv/Scripts/python scripts/databricks_deploy.py run --replay 2 --wait`
+   (this only touches the demo job `lantern-agent-demo`; the live job is never involved).
+4. **Chrome:** open DevTools, device toolbar, 390 x 844, and two tabs:
+   - Tab A, normal planning: `http://localhost:8000/?t=2230`
+   - Tab B, demo mode: `http://localhost:8000/?demo=1&t=2230`
+5. **Microphone:** in Tab A press Start!, tap the video-call button once and allow the microphone for
+   `localhost`, check you see and hear the avatar, hang up, Exit navigation. The permission prompt will not
+   appear again during the recording.
+6. **Databricks:** one window on Jobs & Pipelines showing `lantern-agent` (schedule: every 30 minutes) and
+   `lantern-agent-demo`, and a SQL editor tab with
+   `SELECT event_id, decision, evidence, reason FROM workspace.lantern_demo.agent_decisions ORDER BY decided_at DESC LIMIT 12`.
+7. **Figma:** the file from `docs/DESIGN.md`, on the screens page.
 
-| Time | On screen | Voice-over |
+If you record more than 20 hours after a replay run, run step 3 and the replay again: the synthetic closure is
+valid for 20 hours from the run.
+
+## Recording sequence
+
+| Time | Do exactly this | Say |
 |---|---|---|
-| 0:00-0:15 | App, 22:30, Imperial to Wilson House. Two route cards. | "It's half past ten and a first-year is walking from Imperial's library to Wilson House in Paddington. Map apps give her the fastest way, which cuts through unlit paths in Hyde Park, and none of them know if a pavement on the way closed an hour ago. Lantern is for her." |
-| 0:15-0:35 | Tap **Fastest**, then **Better lit**. Point at the lighting bars and the sentence under the cards. | "Lantern shows two routes side by side. Fastest: 30 minutes, 70% on streets recorded as lit. Better lit: one minute longer, 97% lit, and it stays off paths away from any road. Purple is recorded unlit, grey is not recorded, so she can see what we don't know. Kensington Gardens is shut at this hour, so neither route uses it." |
-| 0:35-0:55 | Databricks job page: scheduled runs every 30 min. Open the latest run's decisions table. | "Routes go stale, so an agent keeps them current. This Databricks job runs every 30 minutes with nobody watching. This run is live: it pulled 113 Transport for London disruption records, found three in our area, and Claude judged all three to be lane closures that don't affect anyone on foot. Nothing published. That's the right answer most of the time." |
-| 0:55-1:25 | Trigger the replay run (`databricks_deploy.py run --replay 1`). Speed this section up and caption it **"4x - a real run takes about 90 seconds"**. Then the decisions table. | "To show a change on demand we replay the captured feed plus eight synthetic records, labelled as synthetic everywhere. Same job, same checks. Claude reads each record and must quote the sentence it relies on. Code then checks the quote really is in the source, matches the street to our walking network, and checks it against TfL's coordinates. A road closed to cars: ignored. 'Pedestrians should take care': held, not explicit. Text says Bayswater Road but the coordinates are 800 metres away: rejected. A burst main closing both footways on Exhibition Road: accepted. Before publishing, the job reruns sixteen baseline journeys. All pass, so it writes version three to a Delta table." |
-| 1:25-1:40 | Back to the app: toast "Agent published update", red banner, route redraws; tap **Why?**. | "The app picks it up on its own. Exhibition Road is closed, both routes now go round by Kensington Gore, three minutes longer, with the old route dotted. 'Why' shows the quoted evidence and that it's replay data. When the record leaves the feed, the agent withdraws the closure and the route goes back." |
-| 1:40-1:52 | Architecture diagram from the README, then the Databricks tables, then the Figma file (Components page and the three screens). | "Under it: an OpenStreetMap walking graph with an exposure-time cost model we can explain weight by weight. Claude Opus 5.5 does the reading; deterministic code does the verifying. Databricks runs the schedule, stores every record, decision and overlay version in Delta, and serves the current version to the app. The interface is designed in Figma as variables and components, and the app's colours, spacing and type are generated from that file." |
-| 1:52-2:00 | Run-history table / status output. | "The closest product is the main-roads walking option in Citymapper. Ours explains the trade-off, shows what it doesn't know, and updates itself. So far every scheduled run has finished, and the judgment step matched our labels on all 121 test records." |
+| 0:00-0:18 | **Tab A.** Leave at 22:30, Imperial to Wilson House. Tap **Fastest**, then **Better lit**. Point at the three legend entries. | "Half past ten, and a first-year is walking from Imperial to her hall in Paddington. Lantern compares two routes. Fastest: 30 minutes, 70% on streets recorded as lit. Better lit: one minute longer, 97%. Yellow is lit, solid grey is recorded unlit, dashed grey is unknown, so she can see what we don't know." |
+| 0:18-0:33 | Tap **Arrive by**, set **00:30**, **Set arrival**. Point at "tomorrow, Sun 15 Nov", the leave time and the hint. | "Now she wants to be home by half past midnight. By then both parks are shut, so the walk is 51 minutes and she must leave at 23:38. Lantern checks that against the router and tells her the better plan: leave by 23:30, while Hyde Park is open, and it is 30 minutes." |
+| 0:33-0:48 | Tap **Leave at** back to 22:30 (or the hint's **Use**). Tap the status line "TfL checked ... no closures". Scroll the LIVE decisions. Switch to the Databricks job page showing the 30-minute schedule. | "Routes go stale, so an agent keeps them current. Every 30 minutes this Databricks job pulls Transport for London's disruption feed and Claude decides what each record means on foot. This is the live run: lane closures, no effect on pedestrians, nothing published. That is the right answer most of the time." |
+| 0:48-1:13 | **Tab B (demo mode).** Tap the status line, press **Replay: burst main**. Speed this up and caption it **"4x: a real run takes about 90 seconds"**. Toast appears, routes redraw with the closure marker. Tap the status line: evidence with the SYNTHETIC tag. Flash the SQL decisions table. | "To show a change on demand we replay the captured feed plus eight synthetic records, labelled synthetic everywhere and published on a separate Databricks path so they can never reach real users. Same agent, same checks. Claude must quote the sentence it relies on; code checks the quote is in the source, matches the street to our walking network and TfL's coordinates, and reruns sixteen baseline journeys. A road closed to cars: ignored. 'Pedestrians should take care': held. A burst main closing both footways on Exhibition Road: accepted, and the route goes round it, three minutes longer." |
+| 1:13-1:25 | Still Tab B. Press **Start!**. | "Start. The map turns to face the way she walks. The first instruction comes from the real route and street names, and it already avoids the closure: in 160 metres, turn left onto Prince Consort Road." |
+| 1:25-1:48 | Tap the **video-call** button (top right). Wait for the avatar and its greeting. Ask aloud: **"Which way do I go first?"** Let it answer. Tap **hang up**. Tap **Exit navigation**. | (Let the avatar speak.) Then: "Walking alone at night is easier with company. This is a live Synthesia avatar, with Claude doing the talking, and it only repeats directions Lantern gave it. Hanging up leaves navigation open." |
+| 1:48-2:00 | README architecture diagram, then the Figma file (components and screens). | "Under it: an OpenStreetMap walking graph with a cost model we can explain weight by weight; Claude reads, plain code verifies; Databricks schedules, stores every decision and serves the result; and the interface is designed in Figma, with the app's colours and type generated from that file." |
+
+If the avatar is slow to appear (a cold start can take 20 to 40 seconds), keep recording and cut the wait, with
+a caption "avatar connecting, cut". Do not speed up the conversation itself.
 
 ## Numbers to re-check on the morning (they change)
 
-- Route times and percentages at 22:30: read them off the app (`/api/route?when=...T22:30:00`).
-- Overlay version numbers: whatever the job publishes.
-- "Every scheduled run has finished": `python scripts/databricks_deploy.py status` prints the counts. Say the real
-  figure, for example "31 of 31 scheduled runs".
-- Citymapper comparison: confirm the feature still exists before saying it.
+- Route times and lit shares at 22:30: read them off the cards.
+- Arrive by 00:30: the leave time, duration and the "leave by" hint are computed live; read them off the screen.
+- Replay: the extra minutes after the closure (three at the time of writing) and the first instruction in
+  navigation.
+- If you mention run counts, use `python scripts/databricks_deploy.py status` and say the real figure.
 
 ## What is automated, manual or mocked (say this if asked)
 
-- Automated: feed ingestion, validation, Claude assessment, evidence and location checks, baseline-journey gate,
-  publication, expiry and withdrawal, and the app picking up new versions.
-- Manual in the demo: pressing run on the replay (the schedule would also do it, within 30 minutes).
-- Mocked: the eight `REPLAY-*` records are synthetic. The live feed had no pedestrian-relevant event in our area
-  during the hackathon, which is itself what the live run shows.
+- **Automated:** feed ingestion, validation, Claude assessment, evidence and location checks, the
+  baseline-journey gate, publication, expiry and withdrawal, the app picking up new versions and applying
+  closures to routing, the arrive-by search, the turn instructions.
+- **Manual in the demo:** pressing Replay (the live schedule runs by itself every 30 minutes).
+- **Mocked:** the eight `REPLAY-*` records are synthetic and live on a separate demo path. The live feed had no
+  pedestrian-relevant event in our area during the hackathon, which is what the live run shows.
+- **Preview only:** navigation does not track position; time, distance and ETA are fixed at the start.
+- **Live:** the companion call (Synthesia avatar, LiveKit, Claude).
 
 ## Likely questions and short answers
 
-- **Is "Better lit" safer?** We don't claim that. It minimises time exposed to observed conditions (unlit, off-street,
-  enclosed, quiet) at weights we state. Nothing is fitted to crime outcomes; `docs/MODEL.md` says why.
-- **Where do the weights come from?** They are stated trade-off ratios (one second unlit counts as two). The
-  sensitivity analysis halves and doubles each one: 95% of journeys keep the same corridor.
-- **What if Claude is wrong?** A wrong "closed" needs a verbatim quote about pedestrians, a street that exists, text
-  that agrees with TfL's coordinates, and sixteen journeys that still work. A wrong "ignore" costs a missed
+- **Is "Better lit" safer?** We don't claim that. It minimises time exposed to observed conditions (unlit,
+  off-street, enclosed, quiet) at weights we state. Nothing is fitted to crime outcomes; `docs/MODEL.md` says why.
+- **Where is the closure warning in the normal app?** A verified closure is applied to routing automatically.
+  The status line says "1 closure applied" and opens the evidence. There is no alarm banner in everyday planning.
+- **Can replay data leak into real routes?** No. Replay runs on its own Databricks job, schema and volume, and
+  the app reads it only in demo mode. A test asserts the live path is untouched by a replay run.
+- **How does Arrive by work?** Closures make a route's duration depend on departure time, so it searches for the
+  latest departure whose own route still arrives on time and re-checks it against the router. Tests cover park
+  closing times and trips across midnight.
+- **What if Claude is wrong?** A wrong "closed" needs a verbatim quote about pedestrians, a street that exists,
+  text that agrees with TfL's coordinates, and sixteen journeys that still work. A wrong "ignore" costs a missed
   closure, which is the state every other map app is already in.
-- **What if the job fails?** The last good version stays published, entries expire on their own `valid_to`, and the
-  app warns when the agent has not checked in for two hours.
+- **What does the companion know?** Only the trip Lantern sent it: destination, route, time and the listed
+  instructions. It is told to use nothing else for directions and never to call a route safe.
+- **What if the call fails or the mic is refused?** A short message and Retry in the call window. Navigation
+  keeps working.
 - **Was it really designed in Figma?** Prototyped in code first, then systematised and refined in Figma through
-  Figma's connector: native variables, components and screens, not pasted screenshots. Figma is now the source
-  of truth for the tokens; `docs/DESIGN.md` lists the decisions made there.
+  Figma's connector: native variables, components and screens. Figma is the source of truth for the tokens,
+  including the map colours; `docs/DESIGN.md` lists the decisions made there.
 - **Why Databricks?** Schedule, storage, audit trail and serving are all there: bronze and silver tables for the
-  feed, a decisions table, immutable overlay versions, and a volume the app reads. The app has no other source of
-  disruption data.
+  feed, a decisions table, immutable overlay versions, and a volume the app reads. The app has no other source
+  of disruption data.

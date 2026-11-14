@@ -12,7 +12,7 @@ Rebuild with `python scripts/setup_data.py`.
 | Evening venues (proxy) | OSM `amenity` in pub, bar, restaurant, fast_food, nightclub; count within 50 m | segment | 780 venues; opening hours not verified | with the network | ODbL 1.0 |
 | Park opening hours | The Royal Parks: [Hyde Park](https://www.royalparks.org.uk/visit/parks/hyde-park) ("Pedestrian gates 5am - midnight"), [Kensington Gardens](https://www.royalparks.org.uk/visit/parks/kensington-gardens) (6am to dusk; 16:30 in Nov-Dec 2026) | park zone (all segments inside the park polygon) | both parks | encoded in `lantern/access.py`; dusk approximated as sunset + 20 min | facts quoted from the official pages |
 | Disruptions | TfL Unified API `GET https://api.tfl.gov.uk/Road/all/Disruption` | record with a point, sometimes street segments | all London (113 records at capture; 3 in the demo area) | fetched by the agent every 30 minutes | [TfL Open Data terms](https://tfl.gov.uk/corporate/terms-and-conditions/transport-data-service): Powered by TfL Open Data. Contains OS data © Crown copyright and database rights 2016 and Geomni UK Map data © and database rights [2019] |
-| Basemap tiles (display only) | OpenFreeMap `https://tiles.openfreemap.org/styles/dark` | n/a | n/a | n/a | © OpenMapTiles, data © OpenStreetMap contributors |
+| Basemap tiles and fonts (display only) | OpenFreeMap vector tiles `https://tiles.openfreemap.org/planet`, styled by `web/mapstyle.js` | n/a | n/a | n/a | © OpenMapTiles, data © OpenStreetMap contributors |
 
 ## What we looked for and did not find
 

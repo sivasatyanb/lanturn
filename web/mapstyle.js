@@ -40,7 +40,7 @@ window.lanternMapStyle = function (c) {
       // Labels: white with a soft dark halo. Route layers are inserted below this layer.
       { id: "label-road", type: "symbol", source: "omt", "source-layer": "transportation_name", minzoom: 13.5,
         filter: ["all", lineg, ["!=", ["get", "class"], "path"]],
-        layout: { "symbol-placement": "line", "symbol-spacing": 260, "text-field": name, "text-font": ["Noto Sans Regular"],
+        layout: { "symbol-placement": "line", "symbol-spacing": 400, "text-field": name, "text-font": ["Noto Sans Regular"],
           "text-size": ["interpolate", ["linear"], ["zoom"], 13.5, 10, 16, 12.5, 18, 14], "text-max-angle": 30, "text-letter-spacing": 0.03,
           "text-rotation-alignment": "map", "text-pitch-alignment": "viewport" },
         paint: label() },

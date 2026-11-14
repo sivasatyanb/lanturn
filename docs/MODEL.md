@@ -58,7 +58,7 @@ m = 500 m is a shrinkage pseudo-length. Estimates (14 Nov 2026 extract): park 0.
 service 0.06, main road 0.013, local street 0.009.
 
 This is an assumption, and a biased one: mappers tag what they notice, so recorded segments are not a random
-sample. Three things keep it honest. The segment stays flagged "not recorded" in every output and is drawn grey,
+sample. Three things keep it honest. The segment stays flagged "not recorded" in every output and is drawn as a dashed grey line,
 never yellow. The app reports the unrecorded share of each route. And `docs/SENSITIVITY.md` reruns everything with
 the assumption forced to 0 and to 1, which turns out to be the largest uncertainty in the model.
 

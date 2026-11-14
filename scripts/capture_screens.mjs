@@ -2,7 +2,7 @@
 // protocol. No dependencies: uses Node's built-in fetch and WebSocket (Node 22+).
 //
 //   node scripts/capture_screens.mjs <name> [query]      e.g.  01-route-comparison "t=2230"
-//   node scripts/capture_screens.mjs <name> [query] --click "#banner"
+//   node scripts/capture_screens.mjs <name> [query] --click "#btn-agent"      e.g.  06-navigation "t=2230&nav=1" --settle 5000
 //
 // Writes docs/screenshots/<name>.png. The app must be running on http://localhost:8000.
 import { spawn } from "node:child_process";
