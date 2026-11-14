@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+  <meta name="theme-color" content="#0c1222">
+  <title>Lantern: night walking routes</title>
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="icon" href="/icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <div id="map" aria-label="Map of walking routes"></div>
+
+  <header id="trip" class="card">
+    <div class="trip-rows">
+      <button class="place" id="btn-from" aria-label="Change start">
+        <span class="dot dot-from" aria-hidden="true"></span>
+        <span class="place-text"><small>From</small><b id="from-name">…</b></span>
+      </button>
+      <button class="place" id="btn-to" aria-label="Change destination">
+        <span class="dot dot-to" aria-hidden="true"></span>
+        <span class="place-text"><small>To</small><b id="to-name">…</b></span>
+      </button>
+    </div>
+    <button id="btn-swap" class="icon-btn" aria-label="Swap start and destination">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4v16M7 20l-4-4M17 20V4M17 4l4 4"/></svg>
+    </button>
+    <div class="times" role="group" aria-label="Departure time" id="times"></div>
+  </header>
+
+  <div class="legend" id="legend" hidden>
+    <span><i class="lg lg-lit"></i>Lit</span>
+    <span><i class="lg lg-unlit"></i>Unlit</span>
+    <span><i class="lg lg-unknown"></i>Not recorded</span>
+  </div>
+
+  <section id="sheet" class="sheet" aria-live="polite">
+    <div class="handle" aria-hidden="true"></div>
+    <div id="banner" class="banner" hidden></div>
+    <div id="notice" class="notice" hidden></div>
+    <div id="cards" class="cards"></div>
+    <p id="explain" class="explain"></p>
+    <footer class="foot">
+      <button id="btn-agent" class="agent-chip" aria-label="Open agent activity">
+        <span class="pulse" id="agent-dot" aria-hidden="true"></span>
+        <span id="agent-chip-text">Checking disruptions…</span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+      </button>
+      <p class="disclaimer">Estimates from open data on street conditions, not a guarantee that a route is safe.</p>
+    </footer>
+  </section>
+
+  <div id="modal" class="modal" hidden>
+    <div class="modal-backdrop" data-close></div>
+    <div class="modal-body" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+      <div class="modal-head">
+        <h2 id="modal-title">Title</h2>
+        <button class="icon-btn" data-close aria-label="Close">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+      </div>
+      <div id="modal-content" class="modal-content"></div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast" hidden></div>
+
+  <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+  <script src="/app.js"></script>
+</body>
+</html>

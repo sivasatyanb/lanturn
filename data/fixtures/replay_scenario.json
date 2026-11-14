@@ -1,0 +1,226 @@
+{
+ "_about": "SYNTHETIC records for the Lantern replay demo. Not real TfL disruptions. See scripts/make_replay_fixture.py.",
+ "steps": {
+  "1": [
+   "REPLAY-001",
+   "REPLAY-002",
+   "REPLAY-003",
+   "REPLAY-004",
+   "REPLAY-005",
+   "REPLAY-006",
+   "REPLAY-007",
+   "REPLAY-008"
+  ],
+  "2": [
+   "REPLAY-002",
+   "REPLAY-003",
+   "REPLAY-004",
+   "REPLAY-005",
+   "REPLAY-006",
+   "REPLAY-007",
+   "REPLAY-008"
+  ]
+ },
+ "records": [
+  {
+   "id": "REPLAY-001",
+   "_synthetic": true,
+   "_expect": "publish_close",
+   "_start_offset_h": -1,
+   "_end_offset_h": 10,
+   "category": "Works",
+   "subCategory": "Emergency works",
+   "severity": "Serious",
+   "status": "Active",
+   "location": "EXHIBITION ROAD (SW7 ) (Westminster)",
+   "comments": "Exhibition Road (Both directions) between Prince Consort Road and Kensington Road - The road, cycle lane and both footways are closed due to a burst water main. There is no pedestrian access past the site.",
+   "currentUpdate": "Thames Water are on site. Repairs are expected to continue overnight.",
+   "point": "[-0.174438, 51.500858]",
+   "geography": {
+    "type": "Point",
+    "coordinates": [
+     -0.174438,
+     51.500858
+    ]
+   },
+   "hasClosures": true,
+   "isProvisional": false,
+   "levelOfInterest": "Medium"
+  },
+  {
+   "id": "REPLAY-002",
+   "_synthetic": true,
+   "_expect": "ignore_not_pedestrian",
+   "_start_offset_h": -2,
+   "_end_offset_h": 20,
+   "category": "Works",
+   "subCategory": "Utility works",
+   "severity": "Serious",
+   "status": "Active",
+   "location": "[A4] KENSINGTON ROAD (SW7 ) (Westminster)",
+   "comments": "[A4] Kensington Road (Eastbound) at the junction of Queen's Gate - The road is closed eastbound for emergency gas works. Traffic is being diverted via Queen's Gate.",
+   "currentUpdate": "Delays are possible.",
+   "point": "[-0.180308, 51.501472]",
+   "geography": {
+    "type": "Point",
+    "coordinates": [
+     -0.180308,
+     51.501472
+    ]
+   },
+   "hasClosures": true,
+   "isProvisional": false,
+   "levelOfInterest": "Medium"
+  },
+  {
+   "id": "REPLAY-003",
+   "_synthetic": true,
+   "_expect": "reject_uncertain|ignore_not_pedestrian",
+   "_start_offset_h": -3,
+   "_end_offset_h": 30,
+   "category": "Works",
+   "subCategory": "Utility works",
+   "severity": "Moderate",
+   "status": "Active",
+   "location": "PRAED STREET (W2 ) (Westminster)",
+   "comments": "Praed Street (Both directions) at the junction of London Street - Lane one is closed for crane operations at a building site. Pedestrians should take care.",
+   "currentUpdate": "Delays are possible.",
+   "point": "[-0.174932, 51.51596]",
+   "geography": {
+    "type": "Point",
+    "coordinates": [
+     -0.174932,
+     51.51596
+    ]
+   },
+   "hasClosures": false,
+   "isProvisional": false,
+   "levelOfInterest": "Medium"
+  },
+  {
+   "id": "REPLAY-004",
+   "_synthetic": true,
+   "_expect": "reject_stale",
+   "_start_offset_h": -30,
+   "_end_offset_h": -6,
+   "category": "Works",
+   "subCategory": "Utility works",
+   "severity": "Moderate",
+   "status": "Active",
+   "location": "GLOUCESTER ROAD (SW7 ) (Kensington & Chelsea)",
+   "comments": "Gloucester Road (Both directions) at the junction of Cromwell Road - The footway is closed due to scaffolding works.",
+   "currentUpdate": "Works are complete.",
+   "point": "[-0.182798, 51.494989]",
+   "geography": {
+    "type": "Point",
+    "coordinates": [
+     -0.182798,
+     51.494989
+    ]
+   },
+   "hasClosures": false,
+   "isProvisional": false,
+   "levelOfInterest": "Medium"
+  },
+  {
+   "id": "REPLAY-005",
+   "_synthetic": true,
+   "_expect": "reject_location",
+   "_start_offset_h": -1,
+   "_end_offset_h": 12,
+   "category": "Works",
+   "subCategory": "Utility works",
+   "severity": "Moderate",
+   "status": "Active",
+   "location": "[A402] BAYSWATER ROAD (W2 ) (Westminster)",
+   "comments": "[A402] Bayswater Road (Westbound) at the junction of Lancaster Terrace - The footway is closed due to a collapsed manhole cover.",
+   "currentUpdate": "Engineers are on site.",
+   "point": "[-0.167466, 51.518118]",
+   "geography": {
+    "type": "Point",
+    "coordinates": [
+     -0.167466,
+     51.518118
+    ]
+   },
+   "hasClosures": false,
+   "isProvisional": false,
+   "levelOfInterest": "Medium"
+  },
+  {
+   "id": "REPLAY-006",
+   "_synthetic": true,
+   "_expect": "publish_restrict",
+   "_start_offset_h": -4,
+   "_end_offset_h": 40,
+   "category": "Works",
+   "subCategory": "Utility works",
+   "severity": "Minimal",
+   "status": "Active",
+   "location": "SUSSEX GARDENS (W2 ) (Westminster)",
+   "comments": "Sussex Gardens (Westbound) at the junction of Southwick Street - The footway is restricted due to Thames Water works.",
+   "currentUpdate": "Delays are possible.",
+   "point": "[-0.170183, 51.516573]",
+   "geography": {
+    "type": "Point",
+    "coordinates": [
+     -0.170183,
+     51.516573
+    ]
+   },
+   "hasClosures": false,
+   "isProvisional": false,
+   "levelOfInterest": "Medium"
+  },
+  {
+   "id": "REPLAY-007",
+   "_synthetic": true,
+   "_expect": "ignore_cleared",
+   "_start_offset_h": -5,
+   "_end_offset_h": 3,
+   "category": "Hazard(s)",
+   "subCategory": "Hazard",
+   "severity": "Moderate",
+   "status": "Active",
+   "location": "QUEEN'S GATE (SW7 ) (Kensington & Chelsea)",
+   "comments": "Queen's Gate (Northbound) at the junction of Prince Consort Road - The footway is closed due to a fallen tree.",
+   "currentUpdate": "The tree has been removed and the footway has now reopened.",
+   "point": "[-0.179834, 51.49964]",
+   "geography": {
+    "type": "Point",
+    "coordinates": [
+     -0.179834,
+     51.49964
+    ]
+   },
+   "hasClosures": false,
+   "isProvisional": false,
+   "levelOfInterest": "Medium"
+  },
+  {
+   "id": "REPLAY-008",
+   "_synthetic": true,
+   "_expect": "ignore_not_pedestrian",
+   "_start_offset_h": -48,
+   "_end_offset_h": 200,
+   "category": "Planned events",
+   "subCategory": "Station closure",
+   "severity": "Minimal",
+   "status": "Active",
+   "location": "[A402] BAYSWATER ROAD (W2 ) (Westminster)",
+   "comments": "[A402] Bayswater Road (Both directions) at the junction of Lancaster Terrace - Lancaster Gate Underground station is closed for lift replacement works. Road traffic is not affected.",
+   "currentUpdate": "No reported delays.",
+   "point": "[-0.17598, 51.511632]",
+   "geography": {
+    "type": "Point",
+    "coordinates": [
+     -0.17598,
+     51.511632
+    ]
+   },
+   "hasClosures": false,
+   "isProvisional": false,
+   "levelOfInterest": "Medium"
+  }
+ ]
+}
