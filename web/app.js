@@ -218,8 +218,15 @@
   function renderNotice(d) {
     const el = $("notice"), parts = [];
     for (const z of d.closed_zones) parts.push(`<b>${esc(z.label)}</b> ${z.opens ? `closed until ${hhmm(z.opens)}` : `gates close ${hhmm(z.closes)}`}`);
-    if (!parts.length) { el.hidden = true; return; }
-    el.innerHTML = parts.join(" · ") + ": routes go around.";
+    let html = parts.length ? parts.join(" · ") + ": routes go around." : "";
+    const e = d.time.earlier;
+    if (e) {                       // arrive by: leaving a little earlier is a much shorter walk
+      html = parts.length ? `${d.closed_zones.map((z) => `<b>${esc(z.label)}</b>`).join(" and ")} closed by then: routes go around.` : "";
+      const why = e.open_zones.length ? `, while ${esc(e.open_zones.join(" and "))} ${e.open_zones.length > 1 ? "are" : "is"} open` : "";
+      html += `<button class="hint" id="btn-earlier" data-clock="${e.depart.local}"><span class="hint-text">Shorter: leave by <b>${e.depart.local}</b>${dayWord(e.depart)} for a ${e.fastest_minutes} min walk${why}</span><span class="hint-go">Use</span></button>`;
+    }
+    if (!html) { el.hidden = true; return; }
+    el.innerHTML = html;
     el.hidden = false;
   }
   function renderStatus() {
@@ -579,6 +586,7 @@
     if (t.id === "open-agent") return openAgent();
     if (t.id === "btn-retry") return loadRoutes();
     if (t.id === "btn-leave-now") { state.when = { mode: "now", clock: null }; return loadRoutes(); }
+    if (t.id === "btn-earlier") { state.when = { mode: "leave", clock: t.dataset.clock }; return loadRoutes(); }
     if (t.id === "btn-change-time" || t.id === "when-detail") return openPicker(state.when.mode);
     if (t.dataset.when) { if (t.dataset.when === "now") { state.when = { mode: "now", clock: null }; return loadRoutes(); } return openPicker(t.dataset.when); }
     if (t.dataset.tp) return pickerStep(t.dataset.tp);

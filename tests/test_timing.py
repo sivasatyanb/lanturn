@@ -87,6 +87,19 @@ def test_api_leave_at_and_arrive_by(client):
         assert a[kind]["late"] is False
 
 
+def test_arrive_by_offers_the_shorter_earlier_walk(client):
+    # Arriving by 00:30 means leaving after Hyde Park has shut (a long way round). Leaving by
+    # 23:30, while it is open, is a much shorter walk: the app says so instead of hiding it.
+    a = client.get("/api/route", params={"mode": "arrive", "time": "00:30"}).json()
+    e = a["time"]["earlier"]
+    assert e and e["depart"]["local"] == "23:30" and "Hyde Park" in e["open_zones"]
+    assert e["fastest_minutes"] + 8 <= a["fastest"]["minutes"]
+    # No such hint when the latest departure is already the short walk.
+    b = client.get("/api/route", params={"mode": "arrive", "time": "23:00"}).json()
+    assert b["time"]["earlier"] is None
+    assert client.get("/api/route", params={"mode": "leave", "time": "22:30"}).json()["time"]["earlier"] is None
+
+
 def test_api_arrive_by_too_late_and_bad_time(client):
     r = client.get("/api/route", params={"mode": "arrive", "time": "21:10"})
     assert r.status_code == 409

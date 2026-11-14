@@ -117,3 +117,33 @@ def plan_arrival(g: Graph, origin: tuple[float, float], dest: tuple[float, float
         raise last_error or RouteError(
             "no_route", "No walkable route is open in the 12 hours before that arrival time.")
     return out
+
+
+def earlier_shorter_option(g: Graph, origin: tuple[float, float], dest: tuple[float, float],
+                           latest: dict, overlay: dict | None = None, lam: float = 1.0,
+                           look_back: timedelta = timedelta(hours=3),
+                           min_saving_s: float = 8 * 60) -> dict[str, Any] | None:
+    """The latest departure is not always the best one: after a park shuts, the walk around it
+    can be much longer than the walk through it a little earlier. If setting off up to three
+    hours before `latest` (a plan from plan_arrival) makes the fastest walk at least eight
+    minutes shorter, return that option: the last minute at which the shorter walk is open.
+    """
+    base = latest["result"]["fastest"]["time_s"]
+    seen = {context_signature(latest["depart"], overlay)}
+    t = latest["depart"]
+    for _ in range(int(look_back.total_seconds() // 60)):
+        t -= timedelta(minutes=1)
+        sig = context_signature(t, overlay)
+        if sig in seen:
+            continue
+        seen.add(sig)
+        try:
+            r = route_pair(g, origin, dest, t, overlay=overlay, lam=lam)
+        except RouteError:
+            continue
+        if base - r["fastest"]["time_s"] >= min_saving_s:
+            closed_then = {z["zone"] for z in r["closed_zones"]}
+            reopened = [z["label"] for z in latest["result"]["closed_zones"] if z["zone"] not in closed_then]
+            return {"depart": t, "result": r, "open_zones": reopened,
+                    "saves_s": round(base - r["fastest"]["time_s"], 1)}
+    return None

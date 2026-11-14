@@ -38,7 +38,7 @@ AGENT_NAME = "lantern-companion"                       # must match lantern/comp
 AVATAR_ID = os.environ.get("SYNTHESIA_AVATAR_ID", "8788bef1-8020-46e0-a8f4-510ea9989b25")
 VOICE_ID = os.environ.get("COMPANION_VOICE_ID", "db6b0ed5-d5d3-463d-ae85-518a07d3c2b4")
 LLM_MODEL = os.environ.get("COMPANION_LLM_MODEL", "claude-opus-5-5")
-STT_MODEL = os.environ.get("COMPANION_STT_MODEL", "cartesia/ink-2")
+STT_MODEL = os.environ.get("COMPANION_STT_MODEL", "deepgram/nova-3")
 TTS_MODEL = os.environ.get("COMPANION_TTS_MODEL", "cartesia/sonic-3.6")
 BEAT = Path(os.environ.get("LANTERN_VAR_DIR", ROOT / "var")) / "companion_worker.json"
 

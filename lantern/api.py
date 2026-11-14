@@ -24,7 +24,8 @@ from .graph import load_graph
 from .overlay import active_entries, empty_overlay, parse_ts
 from .routing import RouteError, features_for, route_pair
 from .store import LocalStore, get_demo_store, get_store
-from .timing import GRACE, KINDS, day_offset, next_occurrence, parse_clock, plan_arrival
+from .timing import (GRACE, KINDS, day_offset, earlier_shorter_option, next_occurrence, parse_clock,
+                     plan_arrival)
 
 load_env()
 app = FastAPI(title="Lantern", version="0.2.0")
@@ -325,11 +326,23 @@ def api_route(from_: str = Query(DEFAULT_ORIGIN, alias="from"), to: str = DEFAUL
         for z in p["result"]["closed_zones"]:
             zones[z["zone"]] = z
     lead = plans["preferred"]
+
+    # Arrive by: mention it when leaving a little earlier makes the walk much shorter.
+    earlier = None
+    if tmode == "arrive":
+        opt = earlier_shorter_option(g, o, d, plans["fastest"], overlay=ov, lam=lam)
+        if opt and opt["depart"] >= now - GRACE:
+            r = opt["result"]
+            earlier = {"depart": _clock(opt["depart"], now),
+                       "fastest_minutes": r["fastest"]["minutes"],
+                       "preferred_minutes": r["preferred"]["minutes"],
+                       "saves_minutes": round(opt["saves_s"] / 60), "open_zones": opt["open_zones"]}
     return {
         "from": o_info, "to": d_info,
         "when": lead["depart"].isoformat(),
         "when_local": lead["depart"].astimezone(LONDON).strftime("%H:%M"),
-        "time": {"mode": tmode, "clock": clock, "now": _clock(now, now), "target": _clock(target, now)},
+        "time": {"mode": tmode, "clock": clock, "now": _clock(now, now), "target": _clock(target, now),
+                 "earlier": earlier},
         "dark": lead["result"]["dark"], "lam": lam, "weights": lead["result"]["weights"],
         "identical": identical, "extra_s": round(pref["time_s"] - fast["time_s"], 1),
         "fastest": public("fastest", fast), "preferred": public("preferred", pref),
