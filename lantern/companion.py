@@ -43,18 +43,31 @@ class CompanionError(Exception):
         self.code, self.message, self.status = code, message, status
 
 
-def missing_config() -> list[str]:
-    """Names (never values) of required settings that are not set."""
-    load_env()
-    return [k for k in REQUIRED if not (os.environ.get(k) or "").strip()]
+def _worker_beat() -> dict | None:
+    """The running worker's heartbeat, or None if there is no fresh one."""
+    try:
+        beat = json.loads(WORKER_BEAT.read_text(encoding="utf-8"))
+        return beat if time.time() - float(beat.get("at", 0)) < WORKER_FRESH_S else None
+    except (OSError, ValueError):
+        return None
 
 
 def worker_running() -> bool:
-    try:
-        beat = json.loads(WORKER_BEAT.read_text(encoding="utf-8"))
-        return time.time() - float(beat.get("at", 0)) < WORKER_FRESH_S
-    except (OSError, ValueError):
-        return False
+    return _worker_beat() is not None
+
+
+def avatar_expected() -> bool:
+    """False only when a running worker says it is in voice-only mode (COMPANION_AVATAR=off)."""
+    beat = _worker_beat()
+    return True if beat is None else bool(beat.get("avatar", True))
+
+
+def missing_config() -> list[str]:
+    """Names (never values) of required settings that are not set. The Synthesia key is not
+    required while the running worker is deliberately voice-only."""
+    load_env()
+    needed = [k for k in REQUIRED if k != "SYNTHESIA_API_KEY" or avatar_expected()]
+    return [k for k in needed if not (os.environ.get(k) or "").strip()]
 
 
 def public_status() -> dict:

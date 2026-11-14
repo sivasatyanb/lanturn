@@ -503,13 +503,13 @@
 
   // ---------- walking companion (live avatar call) ----------
   const LIVEKIT_JS = "https://cdn.jsdelivr.net/npm/livekit-client@2.23.0/dist/livekit-client.umd.min.js";
-  const call = { status: "idle", gen: 0, room: null, sessionId: null, timer: null };
+  const call = { status: "idle", gen: 0, room: null, sessionId: null, timer: null, voiceTimer: null };
   const CALL_ERRORS = { not_configured: "Companion isn't set up on this server yet.", worker_offline: "Companion is offline right now.",
     mic_denied: "Microphone is blocked. Allow it, then retry.", mic_unavailable: "No microphone available here.", timeout: "Couldn't reach the companion.", lib: "Couldn't load the call. Check your connection." };
   function setCall(status, text) {
     call.status = status;
     const el = $("call");
-    el.hidden = status === "idle"; el.dataset.status = status;
+    el.hidden = status === "idle"; el.dataset.status = status; el.dataset.voice = String(status === "live" && !!text);
     $("call-state").textContent = text || "";
     $("btn-retry-call").hidden = status !== "failed";
     $("btn-call").setAttribute("aria-pressed", String(status === "live" || status === "connecting"));
@@ -526,7 +526,7 @@
       first, steps: nav.maneuvers.map((mv) => `After ${km(mv.at_m)}: ${mv.instruction}`) };
   }
   async function releaseCall() {
-    clearTimeout(call.timer); call.timer = null;
+    clearTimeout(call.timer); call.timer = null; clearTimeout(call.voiceTimer); call.voiceTimer = null;
     const room = call.room, sid = call.sessionId;
     call.room = null; call.sessionId = null;
     const v = $("call-video"); try { v.pause(); v.srcObject = null; } catch (_) { /* nothing attached */ }
@@ -560,7 +560,9 @@
       room.on(RoomEvent.TrackSubscribed, (track) => {
         if (stale()) return;
         track.attach($("call-video"));                            // audio and video on one element so they stay in sync
-        if (track.kind === "video") { clearTimeout(call.timer); setCall("live", ""); }
+        if (track.kind === "video") { clearTimeout(call.timer); clearTimeout(call.voiceTimer); setCall("live", ""); }
+        // If the companion can be heard but no avatar video follows, carry on as a voice call.
+        else if (!call.voiceTimer) call.voiceTimer = setTimeout(() => { if (!stale() && call.status === "connecting") { clearTimeout(call.timer); setCall("live", "Voice only"); } }, 6000);
       });
       room.on(RoomEvent.Disconnected, () => { if (!stale() && call.status !== "idle") { call.gen++; releaseCall(); setCall("idle"); toast("Call ended"); } });
       await room.connect(sess.url, sess.token);

@@ -41,6 +41,9 @@ LLM_MODEL = os.environ.get("COMPANION_LLM_MODEL", "claude-opus-5-5")
 STT_MODEL = os.environ.get("COMPANION_STT_MODEL", "deepgram/nova-3")
 TTS_MODEL = os.environ.get("COMPANION_TTS_MODEL", "cartesia/sonic-3.6")
 BEAT = Path(os.environ.get("LANTERN_VAR_DIR", ROOT / "var")) / "companion_worker.json"
+# COMPANION_AVATAR=off runs the companion as a voice-only call (used by companion/roundtrip.py,
+# and a way to keep the call working if the avatar service is unavailable).
+AVATAR_ENABLED = os.environ.get("COMPANION_AVATAR", "on").strip().lower() not in ("off", "0", "false", "no")
 
 log = logging.getLogger("lantern.companion")
 
@@ -108,16 +111,23 @@ async def entrypoint(ctx: JobContext) -> None:
         vad=ctx.proc.userdata["vad"],
     )
     # The avatar must be attached before the session starts, or it never appears.
-    avatar = synthesia.AvatarSession(synthesia.AvatarConfig(avatar_ids=[AVATAR_ID]), join_timeout=60.0)
-    for attempt in range(3):
-        try:
-            await avatar.start(session, room=ctx.room)
-            break
-        except synthesia.SynthesiaError as exc:
-            log.warning("avatar start failed (attempt %d): %s", attempt + 1, type(exc).__name__)
-            if not getattr(exc, "retryable", False) or attempt == 2:
-                raise
-            await asyncio.sleep(2 * (attempt + 1))
+    # If it cannot start (plan, quota, outage), the call carries on as voice only.
+    if AVATAR_ENABLED and os.environ.get("SYNTHESIA_API_KEY", "").strip():
+        avatar = synthesia.AvatarSession(synthesia.AvatarConfig(avatar_ids=[AVATAR_ID]), join_timeout=60.0)
+        for attempt in range(3):
+            try:
+                await avatar.start(session, room=ctx.room)
+                break
+            except Exception as exc:  # noqa: BLE001 - never log the message: it can echo request details
+                retry = isinstance(exc, synthesia.SynthesiaError) and getattr(exc, "retryable", False)
+                log.warning("avatar start failed (attempt %d): %s%s", attempt + 1, type(exc).__name__,
+                            f" [{getattr(exc, 'type', '')}]" if isinstance(exc, synthesia.SynthesiaError) else "")
+                if not retry or attempt == 2:
+                    log.warning("continuing as a voice-only call")
+                    break
+                await asyncio.sleep(2 * (attempt + 1))
+    else:
+        log.info("avatar disabled: voice-only call")
 
     await session.start(agent=Agent(instructions=build_instructions(trip)), room=ctx.room)
     # The greeting is Lantern's own text, spoken as written.
@@ -130,8 +140,8 @@ def _heartbeat() -> None:
     while True:
         try:
             tmp = BEAT.with_suffix(".tmp")
-            tmp.write_text(json.dumps({"at": time.time(), "pid": os.getpid(), "agent": AGENT_NAME}),
-                           encoding="utf-8")
+            tmp.write_text(json.dumps({"at": time.time(), "pid": os.getpid(), "agent": AGENT_NAME,
+                                       "avatar": AVATAR_ENABLED}), encoding="utf-8")
             os.replace(tmp, BEAT)
         except OSError:
             pass
@@ -139,9 +149,16 @@ def _heartbeat() -> None:
 
 
 if __name__ == "__main__":
-    missing = [k for k in ("LIVEKIT_URL", "LIVEKIT_API_KEY", "LIVEKIT_API_SECRET",
-                           "SYNTHESIA_API_KEY", "ANTHROPIC_API_KEY") if not os.environ.get(k, "").strip()]
+    needed = ["LIVEKIT_URL", "LIVEKIT_API_KEY", "LIVEKIT_API_SECRET", "ANTHROPIC_API_KEY"]
+    if AVATAR_ENABLED:
+        needed.append("SYNTHESIA_API_KEY")
+    missing = [k for k in needed if not os.environ.get(k, "").strip()]
     if missing:
         raise SystemExit("Missing in .env (names only): " + ", ".join(missing))
     threading.Thread(target=_heartbeat, daemon=True).start()
-    cli.run_app(WorkerOptions(entrypoint_fnc=entrypoint, prewarm_fnc=prewarm, agent_name=AGENT_NAME))
+    # Keep one process warmed with the voice-activity model loaded, so a call is picked up at once
+    # (the dev default is none, which makes the first call slow enough for LiveKit to re-send the job),
+    # and never turn calls away because this laptop's CPU is busy.
+    cli.run_app(WorkerOptions(entrypoint_fnc=entrypoint, prewarm_fnc=prewarm, agent_name=AGENT_NAME,
+                              num_idle_processes=1, load_threshold=float("inf"),
+                              initialize_process_timeout=30.0))

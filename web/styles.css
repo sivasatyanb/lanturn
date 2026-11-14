@@ -215,7 +215,8 @@ body.nav-on .toast { top: calc(128px + var(--safe-t)); }
 .call { position: fixed; z-index: 8; right: 10px; top: calc(var(--nav-top-h, 128px) + 8px); width: 132px; height: 176px; border-radius: var(--radius); overflow: hidden;
   background: var(--surface-2); border: 1px solid var(--line); box-shadow: 0 10px 30px rgba(0,0,0,.55); display: grid; }
 .call video { grid-area: 1 / 1; width: 100%; height: 100%; object-fit: cover; background: var(--surface-2); }
-.call:not([data-status="live"]) video { visibility: hidden; }
+.call:not([data-status="live"]) video, .call[data-voice="true"] video { visibility: hidden; }
+.call[data-voice="true"]::before { content: ""; grid-area: 1 / 1; place-self: center; width: 56px; height: 56px; margin-top: 4px; border-radius: 50%; background: var(--surface-selected); border: 2px solid var(--fast); box-shadow: 0 0 0 8px color-mix(in srgb, var(--fast) 16%, transparent); }
 .call-state { grid-area: 1 / 1; align-self: start; padding: var(--space-3) var(--space-2) 0; text-align: center; font: var(--type-body-small); color: var(--text); z-index: 1; }
 .call[data-status="connecting"]::before { content: ""; grid-area: 1 / 1; place-self: center; width: 30px; height: 30px; margin-top: 6px; border-radius: 50%; border: 3px solid var(--line); border-top-color: var(--lit); animation: spin 0.9s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }

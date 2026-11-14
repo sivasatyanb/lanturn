@@ -202,11 +202,14 @@ The browser asks for the microphone when the call button is tapped (the camera i
 receives a room URL and a token that can join one room for fifteen minutes. All keys stay on the server and in
 the worker. Hanging up leaves navigation open; leaving navigation ends the call and releases the microphone.
 If the microphone is refused or the service is unavailable, the app says so, offers Retry, and carries on working.
+If the avatar cannot start, the call continues as a voice-only call.
 
 ```bash
 # one-time: the worker needs its own virtualenv (see companion/README.md)
 .venv-agent/Scripts/python companion/check.py        # checks LiveKit, speech, voice and Claude; prints no secrets
 .venv-agent/Scripts/python companion/agent.py dev    # run the worker next to the app
+.venv-agent/Scripts/python companion/roundtrip.py    # spoken round trip with the worker, no browser needed
+node scripts/call_lifecycle.mjs                      # browser call lifecycle in headless Chrome
 ```
 
 ## Databricks
@@ -254,6 +257,8 @@ locally in case Databricks is unreachable.
 | Agent judgment vs hand labels, 113 real + 8 synthetic records | 121/121 on the actionable decision; 11/11 quotes verbatim; 16/16 same on a second pass | `docs/EVALUATION.md` |
 | Databricks end to end | live and replay runs published to Delta and read back by the app, on separate paths | `python scripts/databricks_deploy.py status [--demo]` |
 | Companion dependencies | LiveKit, speech recognition, voice and Claude checked without a browser | `companion/check.py` |
+| Companion conversation | spoken question in, spoken answer out through a real LiveKit room (voice only) | `companion/roundtrip.py` |
+| Call lifecycle in the browser | connecting, live, hang up, exit navigation, microphone released (headless Chrome, simulated microphone) | `scripts/call_lifecycle.mjs` |
 | Sensitivity of recommendations | see above | `docs/SENSITIVITY.md` |
 
 The evaluation's limits are stated in the document: one feed snapshot, few positives, labels that are not blind.

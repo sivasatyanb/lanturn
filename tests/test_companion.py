@@ -63,6 +63,9 @@ def test_missing_setup_and_offline_worker_fail_clearly(env, monkeypatch):
     with pytest.raises(companion.CompanionError) as unset:
         companion.start_session({})
     assert unset.value.code == "not_configured"
+    # A worker that is deliberately voice-only does not need the avatar key.
+    (env / "companion_worker.json").write_text(json.dumps({"at": time.time(), "avatar": False}), encoding="utf-8")
+    assert companion.missing_config() == [] and companion.start_session({})["token"]
 
 
 def test_api_reports_failure_without_leaking_config(env, monkeypatch):

@@ -57,6 +57,23 @@ py -3.14 -m venv .venv-agent                                   # an x64 Python o
 
 Open the app, press **Start!**, then the video-call button at the top right. Microphone access needs
 `http://localhost` or HTTPS. Do not run the worker with `console`: that mode has no room, so no avatar.
+Run only one worker at a time: two workers with the same name share incoming calls between them.
+
+## Tests that need no person
+
+```bash
+# Spoken round trip without a browser: joins a real room, waits for the greeting, speaks a question
+# (synthesised speech as the microphone) and transcribes the companion's spoken answer.
+.venv-agent/Scripts/python companion/roundtrip.py
+
+# Browser call lifecycle in headless Chrome with a simulated microphone: connecting, live, hang up
+# (navigation stays open, microphone released), exit navigation (call ends, microphone released).
+node scripts/call_lifecycle.mjs
+```
+
+Both work with the worker in voice-only mode, which needs no Synthesia key:
+`COMPANION_AVATAR=off .venv-agent/Scripts/python companion/agent.py dev`. Neither proves the avatar video;
+that needs a real call with `SYNTHESIA_API_KEY` set.
 
 ## Behaviour and failure handling
 
@@ -65,7 +82,8 @@ Open the app, press **Start!**, then the video-call button at the top right. Mic
 | Call button tapped | microphone prompt, then "Connecting…" in a small window at the upper right |
 | Microphone refused | "Microphone is blocked. Allow it, then retry." with Retry; navigation is unaffected |
 | Keys missing on the server, or worker not running | a short message with Retry |
-| Avatar does not arrive within 75 seconds | "Couldn't reach the companion." with Retry |
+| Avatar cannot start (plan, quota, outage) or the worker is voice-only | the call continues as "Voice only": the companion can be heard and talked to, with no video |
+| Nothing arrives within 75 seconds | "Couldn't reach the companion." with Retry |
 | Hang up | the call window closes, the microphone is released, navigation stays open |
 | Exit navigation | the call ends and the microphone is released |
 
