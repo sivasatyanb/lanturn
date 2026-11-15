@@ -1,6 +1,8 @@
 # Lanturn
 
-**Night-time walking routes for London students, kept current by an autonomous agent.**
+![Lanturn: your light home](docs/brand/title-card.png)
+
+**Your light home.** Night-time walking routes for London students, kept current by an autonomous agent.
 
 It is 22:30 and a first-year is walking from Imperial's South Kensington campus to Wilson House in Paddington.
 Lanturn shows her two routes side by side: the fastest, and one that trades a minute or two for streets that are
@@ -13,13 +15,25 @@ She can leave now, leave at a time, or ask to arrive by a time; press **Start!**
 the first instruction taken from the real route; and, from there, start a video call with a walking companion
 (a live Synthesia avatar) who keeps her company on the way. The companion is a separate feature from the agent.
 
-Imperial AI Society Hackathon, 14-15 November 2026. Track: **Autonomous Agents**. Bounties: **Databricks**, **Figma**.
+Lanturn describes observed street conditions. It does not predict crime and does not say any route is safe.
 
 | Compare routes (live data) | Arrive by, across midnight | Navigation with the live companion | Agent replay (demo mode) |
 |---|---|---|---|
 | ![Two routes compared at 22:30](docs/screenshots/01-route-comparison.png) | ![Arrive by 00:30](docs/screenshots/05-arrive-by.png) | ![Navigation preview with the companion call](docs/screenshots/10-call-live.png) | ![Replay closure applied](docs/screenshots/02-agent-update.png) |
 
-Lanturn describes observed street conditions. It does not predict crime and does not say any route is safe.
+## Hackathon entry
+
+Imperial AI Society Hackathon, 14-15 November 2026.
+
+- **Track:** Autonomous Agents.
+- **Track bounties:** Databricks, and Best Use of Synthesia.
+- **Cross-track bounty:** Best-Designed AI Product (Figma).
+
+| Sponsor technology | How Lanturn uses it |
+|---|---|
+| **Databricks** | Runs the scheduled TfL disruption agent as a serverless job every 30 minutes, records every record, decision and run in Delta tables, and publishes a versioned routing overlay that the router consumes. The app has no other source of disruption data. See [Databricks](#databricks). |
+| **Synthesia** | Renders the live conversational avatar in the navigation preview through the Interactive Avatar API. LiveKit carries the call (and provides speech recognition and voice), and Claude Haiku 5.5 handles the conversation. See [Walking companion](#walking-companion). |
+| **Figma** | The [Lanturn Figma file](https://www.figma.com/design/1GlEqbaZG7xphZQwJ98Tic) contains the editable route comparison, disruption evidence, time and navigation screens, the components they are built from, and the logo. Its variables supply the visual tokens (colours including the map, radii, spacing, type) that the frontend is generated from. See [docs/DESIGN.md](docs/DESIGN.md). |
 
 ## How it fits together
 
@@ -69,33 +83,52 @@ flowchart LR
 
 ## Run it
 
-Requires Python 3.11+.
+From a clean clone, with Python 3.11 or newer. No account or key is needed for the steps in this section.
 
 ```bash
+git clone https://github.com/sivasatyanb/lanturn.git
+cd lanturn
 python -m venv .venv
 .venv/Scripts/python -m pip install -r requirements.txt      # macOS/Linux: .venv/bin/python
+.venv/Scripts/python -m pytest -q                            # 67 tests, no network
 .venv/Scripts/python -m uvicorn lantern.api:app --port 8000
 ```
 
-Open http://localhost:8000. With no configuration the app uses a local store under `var/` and the built graph
-in `data/processed/`, so it works offline apart from map tiles.
+Open http://localhost:8000 (in a desktop browser, use a phone-sized window, about 390 px wide). The walking
+graph is included in the repository (`data/processed/graph.json.gz`), so routing works immediately; only the map
+tiles and fonts are fetched from the internet.
 
 | Link | What it opens |
 |---|---|
 | `/` | normal planning on the **live** overlay |
 | `/?t=2230` | leave at 22:30 |
 | `/?arrive=0030` | arrive by 00:30 |
-| `/?demo=1` | **demo mode**: the labelled replay data path (see Databricks below) |
+| `/?demo=1` | **demo mode**: the labelled replay data path |
 | `/?demo=1&open=agent` | demo mode with the agent's decisions open |
 
+### What works where
+
+| Feature | Clean clone, no credentials | Needs server-side credentials |
+|---|---|---|
+| Fastest and Better lit routes, lighting breakdown, park closing times | yes | |
+| Leave now, Leave at, Arrive by (24-hour picker) | yes | |
+| Navigation preview (heading, first instruction, time, distance, ETA) | yes | |
+| Tests, sensitivity analysis | yes | |
+| Agent on the **live TfL feed**, run by hand | yes: `python scripts/agent_run.py` fetches the public feed. Without a Claude key the judgment step falls back to keyword rules and labels every decision `rules-fallback` | `ANTHROPIC_API_KEY` for the Claude judgment |
+| Agent on the **labelled synthetic replay** | yes: `python scripts/agent_run.py --replay 1`, then open `/?demo=1` (or press Replay in demo mode) | `ANTHROPIC_API_KEY` for the Claude judgment |
+| Scheduled agent every 30 minutes, Delta tables, published overlay | | a Databricks workspace and CLI login, plus the Claude key in a Databricks secret scope |
+| Walking companion video call | the call button reports that the companion is not set up; everything else keeps working | `LIVEKIT_URL`, `LIVEKIT_API_KEY`, `LIVEKIT_API_SECRET`, `SYNTHESIA_API_KEY`, `ANTHROPIC_API_KEY`, and the worker in `companion/` |
+
+Without configuration the app keeps its state in a local store under `var/` and starts with an empty overlay,
+so the status line reads "TfL check has not run yet" until you run the agent once.
+
 ```bash
-python scripts/agent_run.py --replay 1     # run the agent on the replay scenario (local store)
-python scripts/agent_run.py --replay 2     # the burst main is fixed: closure withdrawn
-python scripts/agent_run.py                # run on the live TfL feed
-python -m pytest -q                        # 67 tests, no network
+python scripts/agent_run.py                # one agent run on the live TfL feed (local store)
+python scripts/agent_run.py --replay 1     # replay: a burst main closes Exhibition Road (demo path only)
+python scripts/agent_run.py --replay 2     # replay: the main is fixed, closure withdrawn
 python scripts/sensitivity.py              # regenerate docs/SENSITIVITY.md
 python scripts/eval_agent.py               # regenerate docs/EVALUATION.md (calls Claude, about $1.60)
-python scripts/setup_data.py               # rebuild the graph from OpenStreetMap
+python scripts/setup_data.py               # rebuild the walking graph from OpenStreetMap (Overpass API)
 python scripts/build_tokens.py             # regenerate web/tokens.css from the Figma token export
 python scripts/build_brand.py              # regenerate the logo: web/logo.svg, web/icon.svg, design/brand/
 node scripts/capture_screens.mjs 01-route-comparison "t=2230"   # phone-size screenshot via headless Chrome
@@ -103,14 +136,15 @@ node scripts/capture_screens.mjs 01-route-comparison "t=2230"   # phone-size scr
 
 ### Configuration
 
-Copy `.env.example` to `.env` (git-ignored). Nothing secret is ever committed, logged or sent to the browser.
+Copy `.env.example` to `.env` (git-ignored) and fill in only what you need. Secrets are read on the server and
+by the companion worker; nothing secret is committed, logged or sent to the browser.
 
 | Name | Where | Purpose |
 |---|---|---|
-| `ANTHROPIC_API_KEY` | `.env` | Claude judgment step for local agent runs. Without it the agent falls back to keyword rules and labels every decision `rules-fallback`. |
+| `ANTHROPIC_API_KEY` | `.env` | Claude judgment step for local agent runs, and the companion's conversation. |
 | `TFL_APP_KEY` | `.env`, optional | Raises TfL rate limits. The feed works without it. |
 | `LANTERN_STORE` | `.env` | `local` (default) or `databricks` to read the overlay the Databricks job published. |
-| `DATABRICKS_PROFILE` | `.env` | Name of the Databricks CLI profile (OAuth, `databricks auth login`). No token is stored. |
+| `DATABRICKS_PROFILE` | `.env` | Name of your Databricks CLI profile (OAuth, `databricks auth login`). No token is stored by this project. |
 | `lantern/anthropic_api_key` | Databricks secret scope | Claude key for the scheduled job. |
 | `LIVEKIT_URL`, `LIVEKIT_API_KEY`, `LIVEKIT_API_SECRET` | `.env` | LiveKit project for the companion call: room tokens, speech recognition and voice. |
 | `SYNTHESIA_API_KEY` | `.env` | Synthesia key with the "Interactive Avatars (write)" scope. Read only by the companion worker. |
@@ -124,7 +158,8 @@ Every segment *e* has a walking time τₑ = lengthₑ / 1.34 m/s (stairs at 0.6
 C(route) = Σₑ τₑ · (1 + λ · Σₖ wₖ · xₖ,ₑ)          [equivalent seconds]
 ```
 
-where xₖ,ₑ ∈ [0, 1] is how much of segment *e* is exposed to condition *k*. λ = 0 gives the **Fastest** route;
+where xₖ,ₑ ∈ [0, 1] is how much of segment *e* is exposed to condition *k*. Every input except the agent's
+overlay comes from OpenStreetMap: way geometry, the `lit`, `tunnel` and `covered` tags, road class and `amenity`. λ = 0 gives the **Fastest** route;
 λ = 1 gives **Better lit**. Park closures and agent-published closures are hard constraints on both.
 
 | Condition *k* | xₖ,ₑ | Source and coverage | wₖ |
@@ -134,6 +169,10 @@ where xₖ,ₑ ∈ [0, 1] is how much of segment *e* is exposed to condition *k*
 | `enclosed` | 1 for an underpass or tunnel, 0.5 for a covered passage | OSM `tunnel` / `covered` | 1.0 |
 | `quiet` | 1 if no main road within 25 m and no pub, bar, restaurant or takeaway within 50 m | OSM road class and `amenity` (a proxy; opening hours unverified) | 0.2 |
 | `disrupted` | 1 on segments the agent has published as restricted | agent overlay | 1.0 |
+
+**Unknown lighting.** 39% of the network has no `lit` tag. Lanturn never treats that as lit and never as
+unlit: an unrecorded segment gets the share of unlit length observed among recorded segments of the same street
+type nearby, the route line draws it dashed grey, and every route card reports its "unknown" percentage.
 
 A weight is a stated trade-off, in plain units: with w = 1, one minute on an unlit segment counts the same as two
 minutes on a lit one. **The weights are not fitted to outcomes and the score is not a probability of anything.**
@@ -234,9 +273,9 @@ replay, and replay data cannot reach normal planning. The app shows the replay p
 | volume `code` | `lantern_bundle.zip`: this repository's package and data, uploaded by the deploy script |
 
 ```bash
-databricks auth login --host <workspace-url> --profile walknight
-databricks secrets create-scope lantern --profile walknight
-databricks secrets put-secret lantern anthropic_api_key --profile walknight
+databricks auth login --host <workspace-url> --profile <profile>     # then set DATABRICKS_PROFILE=<profile> in .env
+databricks secrets create-scope lantern --profile <profile>
+databricks secrets put-secret lantern anthropic_api_key --profile <profile>
 python scripts/databricks_deploy.py deploy --unpause    # upload bundle + notebook, create the scheduled job
 python scripts/databricks_deploy.py run --wait          # one live run now
 python scripts/databricks_deploy.py status              # last run, published overlay, run counts
@@ -264,14 +303,26 @@ locally in case Databricks is unreachable.
 
 The evaluation's limits are stated in the document: one feed snapshot, few positives, labels that are not blind.
 
-## What is real and what is simulated
+## Live TfL polling and the labelled synthetic replay
 
-- **Real:** the walking network, lighting tags and park hours; the live TfL feed; Claude's judgments; the Databricks
-  job, tables and schedule; every route the app draws.
-- **Simulated:** the eight `REPLAY-*` records in `data/fixtures/replay_scenario.json` are synthetic, written in TfL's
-  phrasing and placed on real streets, because the live feed contained no pedestrian-relevant event in the demo area
-  during the hackathon. Replay runs publish only to the demo path, are marked `mode: replay` in the overlay,
-  tagged REPLAY in the app (demo mode only) and SYNTHETIC in the decision log.
+These are two separate things, kept on two separate data paths, and the app always says which one it is showing.
+
+- **Live polling (real).** Every 30 minutes the agent fetches TfL's public road disruption feed and judges the
+  records in the demo area. Normal planning (`/`) reads only this path. During the hackathon the live feed
+  contained no event in the area that affected pedestrians, so the live overlay is empty: the agent's correct
+  answer was "no change", run after run. The live decisions are visible from the status line.
+- **Replay (synthetic, labelled).** To show a routing change on demand, a replay feeds the agent a captured copy
+  of the real feed plus eight **synthetic** records (`REPLAY-*` in `data/fixtures/replay_scenario.json`),
+  written in TfL's phrasing and placed on real streets. One of them closes both footways on Exhibition Road. The
+  replay goes through exactly the same agent code and checks, but publishes to its own path (a second Databricks
+  job, schema and volume, or `var/store_demo` locally). The app shows it only in demo mode (`/?demo=1`), where it
+  is tagged DEMO and REPLAY on screen and SYNTHETIC in the decision log. A test asserts that a replay run leaves
+  the live path untouched.
+
+What else is real and what is not:
+
+- **Real:** the walking network, lighting tags and park hours; Claude's judgments; the Databricks job, tables
+  and schedule; every route the app draws; the companion call (Synthesia avatar, LiveKit, Claude).
 - **Preview only:** navigation shows the start of the selected route with the first instruction and fixed time,
   distance and ETA. The position does not move.
 - **Not built:** live location and turn-by-turn progress, accounts, arbitrary start points (the app offers eight
@@ -290,8 +341,9 @@ The evaluation's limits are stated in the document: one feed snapshot, few posit
 
 ## Attribution
 
-- Walking network and lighting: © OpenStreetMap contributors, ODbL 1.0. `data/processed/graph.json.gz` is a
-  derived database under the same licence.
+- Walking network and lighting: © OpenStreetMap contributors. `data/processed/graph.json.gz` is a database
+  derived from OpenStreetMap and is made available under the [Open Database License 1.0](https://opendatacommons.org/licenses/odbl/1-0/)
+  (see [data/README.md](data/README.md) and https://www.openstreetmap.org/copyright).
 - Disruptions: Powered by TfL Open Data. Contains OS data © Crown copyright and database rights 2016 and Geomni
   UK Map data © and database rights [2019].
 - Park hours: The Royal Parks. Basemap: OpenFreeMap, © OpenMapTiles, data © OpenStreetMap contributors.

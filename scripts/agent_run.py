@@ -1,7 +1,7 @@
 """Run the agent once from the command line (local store).
 
   python scripts/agent_run.py                 live TfL feed
-  python scripts/agent_run.py --replay 1      captured feed + synthetic records (burst main)
+  python scripts/agent_run.py --replay 1      captured feed + synthetic records (burst main), demo path
   python scripts/agent_run.py --replay 2      same, with the burst main withdrawn
 
 The Databricks job runs the same lantern.agent.run.execute(); see databricks/.
@@ -19,7 +19,7 @@ from lantern.agent import run as agent_run  # noqa: E402
 from lantern.agent.replay import replay_feed  # noqa: E402
 from lantern.env import load_env  # noqa: E402
 from lantern.graph import load_graph  # noqa: E402
-from lantern.store import LocalStore  # noqa: E402
+from lantern.store import LocalStore, get_demo_store  # noqa: E402
 
 
 def main() -> int:
@@ -29,7 +29,8 @@ def main() -> int:
     args = ap.parse_args()
     load_env()
     g = load_graph()
-    store = LocalStore()
+    # A replay publishes to the demo path (shown by the app at /?demo=1), never to the live one.
+    store = get_demo_store("local") if args.replay else LocalStore()
     now = datetime.now(timezone.utc)
     if args.replay:
         result = agent_run.execute(g, store, replay_feed(now, args.replay), now=now, mode="replay")

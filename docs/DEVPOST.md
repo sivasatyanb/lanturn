@@ -10,8 +10,8 @@ changed after that and the last commit must be before 12:00.
 | Project name | Lanturn |
 | Tagline | Your light home. Night walking routes for students that explain their trade-offs, update themselves, and keep you company. |
 | Track | Autonomous Agents |
-| Bounties entered | Databricks (track bounty). Figma, Best-Designed AI Product (open to all tracks; does not count towards the two). |
-| GitHub repository | [public repo URL] |
+| Bounties entered | Track bounties: Databricks, and Best Use of Synthesia. Cross-track bounty: Best-Designed AI Product (Figma). |
+| GitHub repository | https://github.com/sivasatyanb/lanturn |
 | Demo video (max 2:00) | [video URL] |
 | Figma file or Figma Make link | https://www.figma.com/design/1GlEqbaZG7xphZQwJ98Tic (set sharing to "anyone with the link can view" first) |
 | Team members | [each person's full name, Luma signup email and university email, and add each to the Devpost project] |
