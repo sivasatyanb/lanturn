@@ -1,9 +1,9 @@
-# Lantern
+# Lanturn
 
 **Night-time walking routes for London students, kept current by an autonomous agent.**
 
 It is 22:30 and a first-year is walking from Imperial's South Kensington campus to Wilson House in Paddington.
-Lantern shows her two routes side by side: the fastest, and one that trades a minute or two for streets that are
+Lanturn shows her two routes side by side: the fastest, and one that trades a minute or two for streets that are
 recorded as lit, near other streets and not enclosed. It says what the trade costs, what it is based on and what
 it does not know. Behind it, an agent running on Databricks reads Transport for London's disruption feed every
 30 minutes, works out which records actually affect someone on foot, proves it against the source text and the
@@ -19,7 +19,7 @@ Imperial AI Society Hackathon, 14-15 November 2026. Track: **Autonomous Agents**
 |---|---|---|---|
 | ![Two routes compared at 22:30](docs/screenshots/01-route-comparison.png) | ![Arrive by 00:30](docs/screenshots/05-arrive-by.png) | ![Navigation preview with the companion call](docs/screenshots/10-call-live.png) | ![Replay closure applied](docs/screenshots/02-agent-update.png) |
 
-Lantern describes observed street conditions. It does not predict crime and does not say any route is safe.
+Lanturn describes observed street conditions. It does not predict crime and does not say any route is safe.
 
 ## How it fits together
 
@@ -97,6 +97,7 @@ python scripts/sensitivity.py              # regenerate docs/SENSITIVITY.md
 python scripts/eval_agent.py               # regenerate docs/EVALUATION.md (calls Claude, about $1.60)
 python scripts/setup_data.py               # rebuild the graph from OpenStreetMap
 python scripts/build_tokens.py             # regenerate web/tokens.css from the Figma token export
+python scripts/build_brand.py              # regenerate the logo: web/logo.svg, web/icon.svg, design/brand/
 node scripts/capture_screens.mjs 01-route-comparison "t=2230"   # phone-size screenshot via headless Chrome
 ```
 
@@ -188,8 +189,8 @@ One run (`lantern/agent/run.py`) does this, the same code locally and in the Dat
 ## Walking companion
 
 Inside the navigation preview, the video-call button starts a live call with an avatar who greets the walker,
-reads out Lantern's first instruction and then chats. Guidance stays on screen: the companion is given only the
-directions Lantern computed and is told to use nothing else if asked about the route.
+reads out Lanturn's first instruction and then chats. Guidance stays on screen: the companion is given only the
+directions Lanturn computed and is told to use nothing else if asked about the route.
 
 | Part | Provided by | Credentials |
 |---|---|---|

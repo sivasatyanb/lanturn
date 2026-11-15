@@ -24,6 +24,8 @@ live TfL feed, Databricks, verified routing update. The walking companion is a s
    `lantern-agent-demo`, and a SQL editor tab with
    `SELECT event_id, decision, evidence, reason FROM workspace.lantern_demo.agent_decisions ORDER BY decided_at DESC LIMIT 12`.
 7. **Figma:** the file from `docs/DESIGN.md`, on the screens page.
+8. **Title card (optional):** `docs/brand/title-card.png` (Lanturn, "Your light home"). The organisers ask for no
+   intro, so if you use it, use it as the closing frame or a thumbnail, not as an opening.
 
 If you record more than 20 hours after a replay run, run step 3 and the replay again: the synthetic closure is
 valid for 20 hours from the run.
@@ -32,12 +34,12 @@ valid for 20 hours from the run.
 
 | Time | Do exactly this | Say |
 |---|---|---|
-| 0:00-0:18 | **Tab A.** Leave at 22:30, Imperial to Wilson House. Tap **Fastest**, then **Better lit**. Point at the three legend entries. | "Half past ten, and a first-year is walking from Imperial to her hall in Paddington. Lantern compares two routes. Fastest: 30 minutes, 70% on streets recorded as lit. Better lit: one minute longer, 97%. Yellow is lit, solid grey is recorded unlit, dashed grey is unknown, so she can see what we don't know." |
-| 0:18-0:33 | Tap **Arrive by**, set **00:30**, **Set arrival**. Point at "tomorrow, Sun 15 Nov", the leave time and the hint. | "Now she wants to be home by half past midnight. By then both parks are shut, so the walk is 51 minutes and she must leave at 23:38. Lantern checks that against the router and tells her the better plan: leave by 23:30, while Hyde Park is open, and it is 30 minutes." |
+| 0:00-0:18 | **Tab A.** Leave at 22:30, Imperial to Wilson House. Tap **Fastest**, then **Better lit**. Point at the three legend entries. | "Half past ten, and a first-year is walking from Imperial to her hall in Paddington. Lanturn compares two routes. Fastest: 30 minutes, 70% on streets recorded as lit. Better lit: one minute longer, 97%. Yellow is lit, solid grey is recorded unlit, dashed grey is unknown, so she can see what we don't know." |
+| 0:18-0:33 | Tap **Arrive by**, set **00:30**, **Set arrival**. Point at "tomorrow, Sun 15 Nov", the leave time and the hint. | "Now she wants to be home by half past midnight. By then both parks are shut, so the walk is 51 minutes and she must leave at 23:38. Lanturn checks that against the router and tells her the better plan: leave by 23:30, while Hyde Park is open, and it is 30 minutes." |
 | 0:33-0:48 | Tap **Leave at** back to 22:30 (or the hint's **Use**). Tap the status line "TfL checked ... no closures". Scroll the LIVE decisions. Switch to the Databricks job page showing the 30-minute schedule. | "Routes go stale, so an agent keeps them current. Every 30 minutes this Databricks job pulls Transport for London's disruption feed and Claude decides what each record means on foot. This is the live run: lane closures, no effect on pedestrians, nothing published. That is the right answer most of the time." |
 | 0:48-1:13 | **Tab B (demo mode).** Tap the status line, press **Replay: burst main**. Speed this up and caption it **"4x: a real run takes about 90 seconds"**. Toast appears, routes redraw with the closure marker. Tap the status line: evidence with the SYNTHETIC tag. Flash the SQL decisions table. | "To show a change on demand we replay the captured feed plus eight synthetic records, labelled synthetic everywhere and published on a separate Databricks path so they can never reach real users. Same agent, same checks. Claude must quote the sentence it relies on; code checks the quote is in the source, matches the street to our walking network and TfL's coordinates, and reruns sixteen baseline journeys. A road closed to cars: ignored. 'Pedestrians should take care': held. A burst main closing both footways on Exhibition Road: accepted, and the route goes round it, three minutes longer." |
 | 1:13-1:25 | Still Tab B. Press **Start!**. | "Start. The map turns to face the way she walks. The first instruction comes from the real route and street names, and it already avoids the closure: in 160 metres, turn left onto Prince Consort Road." |
-| 1:25-1:48 | Tap the **video-call** button (top right). Wait for the avatar and its greeting. Ask aloud: **"Which way do I go first?"** Let it answer. Tap **hang up**. Tap **Exit navigation**. | (Let the avatar speak.) Then: "Walking alone at night is easier with company. This is a live Synthesia avatar, with Claude doing the talking, and it only repeats directions Lantern gave it. Hanging up leaves navigation open." |
+| 1:25-1:48 | Tap the **video-call** button (top right). Wait for the avatar and its greeting. Ask aloud: **"Which way do I go first?"** Let it answer. Tap **hang up**. Tap **Exit navigation**. | (Let the avatar speak.) Then: "Walking alone at night is easier with company. This is a live Synthesia avatar, with Claude doing the talking, and it only repeats directions Lanturn gave it. Hanging up leaves navigation open." |
 | 1:48-2:00 | README architecture diagram, then the Figma file (components and screens). | "Under it: an OpenStreetMap walking graph with a cost model we can explain weight by weight; Claude reads, plain code verifies; Databricks schedules, stores every decision and serves the result; and the interface is designed in Figma, with the app's colours and type generated from that file." |
 
 In testing the avatar appeared about three seconds after the tap and began its greeting straight away; the
@@ -77,7 +79,7 @@ recording and cut the wait with a caption "avatar connecting, cut". Do not speed
 - **What if Claude is wrong?** A wrong "closed" needs a verbatim quote about pedestrians, a street that exists,
   text that agrees with TfL's coordinates, and sixteen journeys that still work. A wrong "ignore" costs a missed
   closure, which is the state every other map app is already in.
-- **What does the companion know?** Only the trip Lantern sent it: destination, route, time and the listed
+- **What does the companion know?** Only the trip Lanturn sent it: destination, route, time and the listed
   instructions. It is told to use nothing else for directions and never to call a route safe.
 - **What if the call fails or the mic is refused?** A short message and Retry in the call window. Navigation
   keeps working.

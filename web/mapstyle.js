@@ -1,4 +1,4 @@
-/* Lantern basemap: a dark style that stays legible at night.
+/* Lanturn basemap: a dark style that stays legible at night.
    Vector tiles and fonts: OpenFreeMap (OpenMapTiles schema, data (c) OpenStreetMap contributors).
    Colours are the design tokens (color/map/*), so the map follows the Figma file like the rest of the UI. */
 window.lanternMapStyle = function (c) {

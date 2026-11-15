@@ -1,4 +1,4 @@
-/* Lantern mobile web app. Plain JS + MapLibre GL; no build step. */
+/* Lanturn mobile web app. Plain JS + MapLibre GL; no build step. */
 (() => {
   "use strict";
   const $ = (id) => document.getElementById(id);
@@ -627,7 +627,7 @@
     try { state.config = await api("/api/config"); }
     catch (e) {
       $("cards").className = "cards single";
-      $("cards").innerHTML = `<div class="error"><b>Can't reach Lantern</b><p>The route service is not responding. Check your connection.</p><button class="btn" onclick="location.reload()">Reload</button></div>`;
+      $("cards").innerHTML = `<div class="error"><b>Can't reach Lanturn</b><p>The route service is not responding. Check your connection.</p><button class="btn" onclick="location.reload()">Reload</button></div>`;
       return;
     }
     state.from = state.config.default.from; state.to = state.config.default.to;

@@ -28,7 +28,7 @@ from .timing import (GRACE, KINDS, day_offset, earlier_shorter_option, next_occu
                      plan_arrival)
 
 load_env()
-app = FastAPI(title="Lantern", version="0.2.0")
+app = FastAPI(title="Lanturn", version="0.2.0")
 WEB = ROOT / "web"
 OVERLAY_TTL_S = float(os.environ.get("LANTERN_OVERLAY_TTL_S", "20"))
 STALE_AFTER_S = 2 * 3600      # warn if the agent has not completed a run for this long

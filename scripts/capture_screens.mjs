@@ -2,6 +2,7 @@
 // protocol. No dependencies: uses Node's built-in fetch and WebSocket (Node 22+).
 //
 //   node scripts/capture_screens.mjs <name> [query]      e.g.  01-route-comparison "t=2230"
+//   node scripts/capture_screens.mjs <name> [query] --clip "#trip"           only that element (the header)
 //   node scripts/capture_screens.mjs <name> [query] --click "#btn-agent"      e.g.  06-navigation "t=2230&nav=1" --settle 5000
 //
 // Writes docs/screenshots/<name>.png. The app must be running on http://localhost:8000.
@@ -69,7 +70,14 @@ try {
   if (clickSel) { await evalJs(`document.querySelector(${JSON.stringify(clickSel)}).click()`); await sleep(2500); }
   const info = await evalJs(`(() => { const s = window.__lantern; return JSON.stringify({ overlay: s.data && s.data.overlay.version, mode: s.data && s.data.overlay.mode,
     layers: (() => { try { return s.map.getStyle().layers.length; } catch (e) { return 0; } })(), font: document.fonts.check("700 28px Inter"), width: innerWidth }); })()`);
-  const shot = await send("Page.captureScreenshot", { format: "png" });
+  // --clip "#selector": capture only that element (plus a small margin), e.g. the header.
+  const clipSel = arg("--clip", null);
+  let clip;
+  if (clipSel) {
+    const r = JSON.parse(await evalJs(`(() => { const b = document.querySelector(${JSON.stringify(clipSel)}).getBoundingClientRect(); return JSON.stringify({ x: b.left, y: b.top, w: b.width, h: b.height }); })()`));
+    clip = { x: Math.max(0, r.x - 10), y: Math.max(0, r.y - 10), width: Math.min(390, r.w + 20), height: r.h + 20, scale: 1 };
+  }
+  const shot = await send("Page.captureScreenshot", clip ? { format: "png", clip } : { format: "png" });
   const out = join(ROOT, "docs", "screenshots", name + ".png");
   writeFileSync(out, Buffer.from(shot.data, "base64"));
   console.log("wrote", out, info);

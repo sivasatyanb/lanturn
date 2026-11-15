@@ -1,7 +1,7 @@
 {
-  "_about": "Design tokens exported from the Lantern Figma file (variable collection 'Lantern', mode 'Night') through the Figma connector on 14 Nov 2026 (V2 map, lighting and navigation tokens added the same day). Figma is the source of truth: edit the variables there, re-export, then run `python scripts/build_tokens.py` to regenerate web/tokens.css.",
+  "_about": "Design tokens exported from the Lanturn Figma file (variable collection 'Lanturn', mode 'Night') through the Figma connector on 14 Nov 2026 (V2 map, lighting and navigation tokens added the same day). Figma is the source of truth: edit the variables there, re-export, then run `python scripts/build_tokens.py` to regenerate web/tokens.css.",
   "figma_file": "https://www.figma.com/design/1GlEqbaZG7xphZQwJ98Tic",
-  "collection": "Lantern",
+  "collection": "Lanturn",
   "mode": "Night",
   "variables": [
     ["color/bg/app", "--bg", "COLOR", "#0c1222"],
@@ -13,6 +13,7 @@
     ["color/text/primary", "--text", "COLOR", "#f3f5fb"],
     ["color/text/muted", "--muted", "COLOR", "#a4aec6"],
     ["color/text/on-light", "--on-light", "COLOR", "#0c1222"],
+    ["color/brand/wordmark", "--brand-ink", "COLOR", "#fbf2e1"],
     ["color/route/fastest", "--fast", "COLOR", "#62c6ff"],
     ["color/route/lit", "--lit", "COLOR", "#ffc857"],
     ["color/route/previous", "--prev", "COLOR", "#c9d1e6"],

@@ -7,8 +7,8 @@ changed after that and the last commit must be before 12:00.
 
 | Field | Value |
 |---|---|
-| Project name | Lantern |
-| Tagline | Night walking routes for students that explain their trade-offs, update themselves, and keep you company. |
+| Project name | Lanturn |
+| Tagline | Your light home. Night walking routes for students that explain their trade-offs, update themselves, and keep you company. |
 | Track | Autonomous Agents |
 | Bounties entered | Databricks (track bounty). Figma, Best-Designed AI Product (open to all tracks; does not count towards the two). |
 | GitHub repository | [public repo URL] |
@@ -24,7 +24,7 @@ well-lit streets", has no button. And no route planner knows that a pavement on 
 
 ## What it does
 
-Lantern shows two walking routes side by side: the fastest, and a "better lit" one that accepts a little extra
+Lanturn shows two walking routes side by side: the fastest, and a "better lit" one that accepts a little extra
 time to stay on streets recorded as lit, close to other streets and out of underpasses. For Imperial to Wilson
 House at 22:30 that is 31 minutes instead of 30, with 97% of the route on lit streets instead of 70%. It states
 the cost of the trade, colours the route by what is known about lighting, and shows the share it knows nothing
@@ -43,10 +43,10 @@ against TfL's coordinates, and reruns sixteen baseline journeys. Only then is a 
 published. The app applies it to routing without fuss and one status line opens the evidence. Stale records
 expire, withdrawn ones are removed, and a failed run leaves the last good version in place.
 
-Press Start and Lantern shows a navigation preview: the map turns to face the way you walk and the first
+Press Start and Lanturn shows a navigation preview: the map turns to face the way you walk and the first
 instruction comes from the real route and street names. From there you can start a video call with a walking
 companion, a live Synthesia avatar with Claude doing the talking, who greets you, reads out the first
-instruction and keeps you company. It only repeats directions Lantern gave it.
+instruction and keeps you company. It only repeats directions Lanturn gave it.
 
 ## How we built it
 
@@ -68,7 +68,7 @@ instruction and keeps you company. It only repeats directions Lantern gave it.
   Inference does speech recognition and voice; Claude holds the conversation. The browser only ever receives a
   short-lived room token.
 - **App and design:** a mobile web app (FastAPI + MapLibre GL, installable PWA). Planning, the agent evidence and
-  navigation are designed in Figma as 42 variables, 14 text styles, 18 components and six screens, using the
+  navigation are designed in Figma as 43 variables, 14 text styles, 22 components and six screens, using the
   real route geometry as editable vectors. The app's colours (including the basemap), radii, spacing and type
   are generated from the Figma variables, so the file is the source of truth for the look (`docs/DESIGN.md`).
 

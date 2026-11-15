@@ -4,7 +4,9 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
   <meta name="theme-color" content="#0c1222">
-  <title>Lantern: night walking routes</title>
+  <meta name="application-name" content="Lanturn">
+  <meta name="description" content="Lanturn: your light home. Night walking routes that show what is lit, and keep themselves current.">
+  <title>Lanturn: night walking routes</title>
   <link rel="manifest" href="/manifest.webmanifest">
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css">
@@ -19,6 +21,7 @@
 
   <!-- ===== Planning ===== -->
   <header id="trip" class="card plan-only">
+    <div class="brand"><img src="/logo.svg" alt="Lanturn" width="109" height="18"></div>
     <div class="trip-rows">
       <button class="place" id="btn-from" aria-label="Change start">
         <span class="dot dot-from" aria-hidden="true"></span>

@@ -1,12 +1,12 @@
 # Walking companion
 
-A live avatar video call inside Lantern's navigation preview. The companion greets the walker, reads out
-Lantern's first instruction, then keeps them company. It is a separate feature from the disruption agent.
+A live avatar video call inside Lanturn's navigation preview. The companion greets the walker, reads out
+Lanturn's first instruction, then keeps them company. It is a separate feature from the disruption agent.
 
 ## How a call is put together
 
 ```
-browser ── POST /api/companion/session ──> Lantern API      mints a 15-minute token for one new room
+browser ── POST /api/companion/session ──> Lanturn API      mints a 15-minute token for one new room
 browser ── joins the LiveKit room (microphone on, camera off)
 LiveKit ── dispatches the "lantern-companion" worker (companion/agent.py) to that room
 worker  ── speech recognition -> Claude -> voice, and asks Synthesia to render the avatar,
@@ -21,9 +21,9 @@ worker  ── speech recognition -> Claude -> voice, and asks Synthesia to rend
 | Synthesia Interactive Avatar API | avatar video, lip-synced to the companion's voice | `SYNTHESIA_API_KEY` |
 
 Synthesia's API only renders the avatar: it has no prompt, greeting or knowledge setting. Context is passed
-the LiveKit way. The app sends the trip (destination, route, time, Lantern's instructions) to the API, which
+the LiveKit way. The app sends the trip (destination, route, time, Lanturn's instructions) to the API, which
 puts a bounded, plain-text copy in the room's agent-dispatch metadata; the worker builds the companion's
-instructions from it and speaks Lantern's own greeting text as written.
+instructions from it and speaks Lanturn's own greeting text as written.
 
 ## Setup
 
@@ -92,6 +92,6 @@ browser tab was closed.
 
 ## What the companion may say about the route
 
-Only what Lantern supplied for this trip. Its instructions say: you are company, not the navigator; answer
+Only what Lanturn supplied for this trip. Its instructions say: you are company, not the navigator; answer
 route questions only from the supplied directions; if the answer is not there, say the screen has it; never
 say a street is safe or unsafe; if the walker is in danger, tell them to call 999.
