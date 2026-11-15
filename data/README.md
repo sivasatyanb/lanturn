@@ -1,6 +1,6 @@
 # Data in this repository: sources and licences
 
-The code in this repository and the data in this folder are licensed separately.
+The code in this repository is under the MIT License (see `LICENSE`). The data in this folder is licensed separately, as listed here.
 
 | File | What it is | Licence and attribution |
 |---|---|---|

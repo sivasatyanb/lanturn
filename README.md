@@ -339,6 +339,12 @@ What else is real and what is not:
 - TfL's road feed is written for drivers and mostly covers the roads TfL manages. Borough roadworks are not in it.
 - Walking times ignore waits at crossings.
 
+## Licence
+
+The code is released under the [MIT License](LICENSE). The data in `data/` is licensed separately: the walking
+graph is derived from OpenStreetMap and is under the Open Database License, and the captured TfL feed is TfL Open
+Data. Details are in [data/README.md](data/README.md).
+
 ## Attribution
 
 - Walking network and lighting: © OpenStreetMap contributors. `data/processed/graph.json.gz` is a database
